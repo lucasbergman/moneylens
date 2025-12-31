@@ -2,6 +2,12 @@
 {
   projectRootFile = "flake.nix";
   programs = {
+    buildifier.enable = true;
+    google-java-format = {
+      enable = true;
+      aospStyle = true; # 4-space indents
+    };
+    ktlint.enable = true;
     nixfmt.enable = true;
     prettier = {
       enable = true;

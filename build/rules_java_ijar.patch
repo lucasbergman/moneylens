@@ -1,0 +1,13 @@
+diff --git a/toolchains/bootclasspath.bzl b/toolchains/bootclasspath.bzl
+index 93da5de..9ce6e6a 100644
+--- a/toolchains/bootclasspath.bzl
++++ b/toolchains/bootclasspath.bzl
+@@ -266,7 +266,7 @@ _bootclasspath = rule(
+             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+         ),
+         "_ijar": attr.label(
+-            default = _compute_ijar,
++            default = "@remote_java_tools//:ijar_cc_binary",
+             cfg = "exec",
+             executable = True,
+         ),

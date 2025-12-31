@@ -1,0 +1,69 @@
+module(name = "moneylens")
+
+bazel_dep(name = "platforms", version = "1.0.0")  # undeclared dep of rules_nixpkgs_cc
+bazel_dep(name = "rules_cc", version = "0.2.16")
+bazel_dep(name = "rules_java", version = "9.3.0")
+bazel_dep(name = "rules_kotlin", version = "2.2.2")
+bazel_dep(name = "rules_nixpkgs_core", version = "0.13.0")
+bazel_dep(name = "rules_nixpkgs_cc", version = "0.13.0")
+bazel_dep(name = "rules_nixpkgs_java", version = "0.13.0")
+
+_RULES_NIXPKGS_COMMIT = "cb0f9be1798131ea4336fd02b850edeeb1972680"
+
+_RULES_NIXPKGS_HASH = "sha256-xQQb/x9h1OfDrinsa5N09e7KUv8opAoUbVxGKtQtv4E="
+
+# The patch fixes rules_java to build ijar from source (for NixOS)
+#
+# In rules_java/toolchains/bootclasspath.bzl, the _compute_ijar function uses
+# a downloaded binary if the host is x86_64-linux, which doesn't work on
+# NixOS. I'm surprised that that doesn't somehow use the bootstrap toolchain; I
+# guess there's something I don't understand.
+archive_override(
+    module_name = "rules_java",
+    integrity = "sha256-bvJtT5eOi0z1zh1HUy1wy2LNGEMSJ6HIAHyPeEMkPAY=",
+    patch_args = ["-p1"],
+    patches = ["//build:rules_java_ijar.patch"],
+    strip_prefix = "",
+    urls = ["https://github.com/bazelbuild/rules_java/releases/download/9.3.0/rules_java-9.3.0.tar.gz"],
+)
+
+# It would be nice if rules_nixpkgs cut new versions sometimes
+archive_override(
+    module_name = "rules_nixpkgs_core",
+    integrity = _RULES_NIXPKGS_HASH,
+    strip_prefix = "rules_nixpkgs-%s/core" % _RULES_NIXPKGS_COMMIT,
+    urls = ["https://github.com/tweag/rules_nixpkgs/archive/%s.tar.gz" % _RULES_NIXPKGS_COMMIT],
+)
+
+archive_override(
+    module_name = "rules_nixpkgs_cc",
+    integrity = _RULES_NIXPKGS_HASH,
+    strip_prefix = "rules_nixpkgs-%s/toolchains/cc" % _RULES_NIXPKGS_COMMIT,
+    urls = ["https://github.com/tweag/rules_nixpkgs/archive/%s.tar.gz" % _RULES_NIXPKGS_COMMIT],
+)
+
+archive_override(
+    module_name = "rules_nixpkgs_java",
+    integrity = _RULES_NIXPKGS_HASH,
+    strip_prefix = "rules_nixpkgs-%s/toolchains/java" % _RULES_NIXPKGS_COMMIT,
+    urls = ["https://github.com/tweag/rules_nixpkgs/archive/%s.tar.gz" % _RULES_NIXPKGS_COMMIT],
+)
+
+nix_repo = use_extension("@rules_nixpkgs_core//extensions:repository.bzl", "nix_repo")
+nix_repo.file(
+    name = "nixpkgs",
+    file = "//build:nixpkgs.nix",
+    file_deps = ["//:flake.lock"],
+)
+use_repo(nix_repo, "nixpkgs")
+
+toolchains_configure = use_extension("//build:toolchains.bzl", "toolchains_configure")
+use_repo(toolchains_configure, "nixpkgs_java_runtime")
+use_repo(toolchains_configure, "nixpkgs_java_runtime_toolchain")
+use_repo(toolchains_configure, "nixpkgs_cc")
+use_repo(toolchains_configure, "nixpkgs_cc_toolchains")
+use_repo(toolchains_configure, "nixpkgs_cc_info")
+
+register_toolchains("@nixpkgs_cc_toolchains//:all")
+
+register_toolchains("@nixpkgs_java_runtime_toolchain//:all")
