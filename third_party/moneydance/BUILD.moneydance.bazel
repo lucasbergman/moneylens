@@ -1,0 +1,10 @@
+load("@rules_java//java:defs.bzl", "java_import")
+
+java_import(
+    name = "lib",
+    jars = [
+        "lib/extadmin.jar",
+        "lib/moneydance-dev.jar",
+    ],
+    visibility = ["//visibility:public"],
+)

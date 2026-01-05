@@ -67,3 +67,6 @@ use_repo(toolchains_configure, "nixpkgs_cc_info")
 register_toolchains("@nixpkgs_cc_toolchains//:all")
 
 register_toolchains("@nixpkgs_java_runtime_toolchain//:all")
+
+moneydance_deps = use_extension("//third_party/moneydance:repositories.bzl", "moneydance_deps")
+use_repo(moneydance_deps, "moneydance_devkit")

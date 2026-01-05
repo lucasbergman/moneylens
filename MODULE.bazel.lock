@@ -348,6 +348,35 @@
         ]
       }
     },
+    "//third_party/moneydance:repositories.bzl%moneydance_deps": {
+      "general": {
+        "bzlTransitiveDigest": "PdUxIdAAZDVloMxjbQNPQact3mHPHcQkmnUVsCjOo4o=",
+        "usagesDigest": "JJUSDy+Qwcjk7IWB2rDBAWM8pHtrMlyh+janDFyCEx8=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "moneydance_devkit": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "attributes": {
+              "build_file": "@@//third_party/moneydance:BUILD.moneydance.bazel",
+              "integrity": "sha256-AxTwSGPukkot0SsDg3TJA0JTPk54dgfjAAAKdqzTI4I=",
+              "strip_prefix": "moneydance-devkit-5.1",
+              "urls": [
+                "https://infinitekind.com/dev/moneydance-devkit-5.1.tar.gz"
+              ]
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "@@pybind11_bazel+//:internal_configure.bzl%internal_configure_extension": {
       "general": {
         "bzlTransitiveDigest": "G7xCmtNWXRuBtChRgB5OK5+gmM8Uoy8Mec/B7j3fhqs=",
