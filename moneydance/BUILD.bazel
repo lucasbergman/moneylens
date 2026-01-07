@@ -1,0 +1,26 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+
+java_binary(
+    name = "key_admin",
+    main_class = "com.moneydance.admin.KeyAdmin",
+    runtime_deps = ["@moneydance_devkit//:lib"],
+)
+
+genrule(
+    name = "moneylens_mxt",
+    srcs = [
+        "//moneydance/src/main/kotlin:moneylens.jar",
+        ":test-private-key",
+    ],
+    outs = ["moneylens.mxt"],
+    cmd = """
+        $(location :key_admin) signextjar \
+            $(location :test-private-key) \
+            99 \
+            moneylens \
+            $(location //moneydance/src/main/kotlin:moneylens.jar)
+
+        mv s-moneylens.mxt $@
+    """,
+    tools = [":key_admin"],
+)
