@@ -1,0 +1,15 @@
+load("@rules_kotlin//kotlin:core.bzl", "define_kt_toolchain", "kt_kotlinc_options")
+
+kt_kotlinc_options(
+    name = "kt_options_jvm_11",
+    jvm_target = "11",
+    visibility = ["//visibility:private"],
+)
+
+# Based on the Ant build file in the Moneydance developer kit, it looks like
+# Moneydance extensions should target Java 11. I'm not sure if there's a good
+# way of knowing whether that's still necessary.
+define_kt_toolchain(
+    name = "kotlin_toolchain_moneydance",
+    kotlinc_options = ":kt_options_jvm_11",
+)
