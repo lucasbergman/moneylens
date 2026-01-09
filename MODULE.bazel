@@ -8,7 +8,7 @@ bazel_dep(name = "rules_kotlin", version = "2.2.2")
 bazel_dep(name = "rules_nixpkgs_core", version = "0.13.0")
 bazel_dep(name = "rules_nixpkgs_cc", version = "0.13.0")
 bazel_dep(name = "rules_nixpkgs_java", version = "0.13.0")
-bazel_dep(name = "rules_proto", version = "7.1.0")
+bazel_dep(name = "rules_proto", version = "7.1.0")  # TODO: deprecated
 
 _RULES_NIXPKGS_COMMIT = "cb0f9be1798131ea4336fd02b850edeeb1972680"
 

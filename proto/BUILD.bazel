@@ -1,0 +1,23 @@
+load("@protobuf//bazel:java_proto_library.bzl", "java_proto_library")
+load("@rules_java//java:defs.bzl", "java_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+package(default_visibility = ["//visibility:public"])
+
+proto_library(
+    name = "transactions_proto",
+    srcs = ["transactions.proto"],
+)
+
+java_proto_library(
+    name = "transactions_java_proto",
+    deps = [":transactions_proto"],
+)
+
+java_library(
+    name = "transactions_java",
+    exports = [
+        ":transactions_java_proto",
+        "@protobuf//java/core",
+    ],
+)
