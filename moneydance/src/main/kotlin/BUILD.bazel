@@ -2,7 +2,10 @@ load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 kt_jvm_library(
     name = "moneylens",
-    srcs = ["Main.kt"],
+    srcs = [
+        "Main.kt",
+        "MainDialog.kt",
+    ],
     resources = ["//moneydance/src/main/resources"],
     visibility = ["//visibility:public"],
     deps = [

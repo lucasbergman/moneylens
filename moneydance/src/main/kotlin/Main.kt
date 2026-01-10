@@ -2,7 +2,7 @@ package com.moneydance.modules.features.moneylens
 
 import com.moneydance.apps.md.controller.FeatureModule
 import java.io.File
-import javax.swing.JOptionPane
+import javax.swing.SwingUtilities
 
 private const val URI = "moneylens:hello"
 
@@ -29,22 +29,13 @@ class Main : FeatureModule() {
      */
     override fun invoke(uri: String) {
         if (uri != URI) return
-        showHelloWorldDialog()
+        MainDialog().isVisible = true
     }
 
     /**
      * Returns the name of the extension.
      */
     override fun getName(): String = "Money Lens"
-
-    private fun showHelloWorldDialog() {
-        JOptionPane.showMessageDialog(
-            null,
-            "Hello from the Money Lens extension!",
-            "Money Lens",
-            JOptionPane.INFORMATION_MESSAGE,
-        )
-    }
 
     private fun ensureStateDirectory() {
         val stateDir = getStateDirectory()
