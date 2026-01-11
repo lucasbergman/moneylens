@@ -1,4 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary")
+load("@rules_java//java:java_single_jar.bzl", "java_single_jar")
 
 java_binary(
     name = "key_admin",
@@ -6,10 +7,30 @@ java_binary(
     runtime_deps = ["@moneydance_devkit//:lib"],
 )
 
+# This target that represents the environment that the :moneylens plugin gets
+# deployed into, like Moneydance's internals that we compile against. (As I'm
+# writing this in Jan 2026, Moneydance 2024.4_5253 also includes the Kotlin
+# standard library.) This gets excluded from the plugin bundle in the
+# :moneylens target.
+java_single_jar(
+    name = "moneydance_runtime",
+    deps = [
+        "@moneydance_devkit//:lib",
+        "@rules_kotlin//kotlin/compiler:kotlin-stdlib",
+    ],
+)
+
+java_single_jar(
+    name = "moneylens",
+    deploy_env = [":moneydance_runtime"],
+    visibility = ["//visibility:public"],
+    deps = ["//moneydance/src/main/kotlin:moneylens_lib"],
+)
+
 genrule(
     name = "moneylens_mxt",
     srcs = [
-        "//moneydance/src/main/kotlin:moneylens.jar",
+        "moneylens.jar",
         ":test-private-key",
     ],
     outs = ["moneylens.mxt"],
@@ -18,7 +39,7 @@ genrule(
             $(location :test-private-key) \
             99 \
             moneylens \
-            $(location //moneydance/src/main/kotlin:moneylens.jar)
+            $(location :moneylens.jar)
 
         mv s-moneylens.mxt $@
     """,
