@@ -14,17 +14,24 @@ _RULES_NIXPKGS_COMMIT = "cb0f9be1798131ea4336fd02b850edeeb1972680"
 
 _RULES_NIXPKGS_HASH = "sha256-xQQb/x9h1OfDrinsa5N09e7KUv8opAoUbVxGKtQtv4E="
 
-# The patch fixes rules_java to build ijar from source (for NixOS)
+# The patches fix rules_java to build ijar and singlejar from source (for NixOS)
 #
 # In rules_java/toolchains/bootclasspath.bzl, the _compute_ijar function uses
 # a downloaded binary if the host is x86_64-linux, which doesn't work on
 # NixOS. I'm surprised that that doesn't somehow use the bootstrap toolchain; I
 # guess there's something I don't understand.
+#
+# There is a similar bug for rules_java_singlejar, but that has an easier
+# fix. The Java compilation toolchain already has a singlejar executable
+# hanging off it, so the patch just uses that.
 archive_override(
     module_name = "rules_java",
     integrity = "sha256-bvJtT5eOi0z1zh1HUy1wy2LNGEMSJ6HIAHyPeEMkPAY=",
     patch_args = ["-p1"],
-    patches = ["//build:rules_java_ijar.patch"],
+    patches = [
+        "//build:rules_java_ijar.patch",
+        "//build:rules_java_singlejar.patch",
+    ],
     strip_prefix = "",
     urls = ["https://github.com/bazelbuild/rules_java/releases/download/9.3.0/rules_java-9.3.0.tar.gz"],
 )

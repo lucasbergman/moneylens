@@ -1,0 +1,46 @@
+diff --git a/java/java_single_jar.bzl b/java/java_single_jar.bzl
+index bfdd21c..768da37 100644
+--- a/java/java_single_jar.bzl
++++ b/java/java_single_jar.bzl
+@@ -2,6 +2,7 @@
+ 
+ load("//java/common:java_common.bzl", "java_common")
+ load("//java/common:java_info.bzl", "JavaInfo")
++load("//java/common:java_semantics.bzl", "semantics")
+ 
+ def _single_jar_inputs(deps, deploy_env):
+     transitive_inputs = []
+@@ -62,13 +63,14 @@ def _java_single_jar(ctx):
+     if ctx.attr.exclude_pattern:
+         args.add("--exclude_pattern", ctx.attr.exclude_pattern)
+ 
++    toolchain = semantics.find_java_toolchain(ctx)
+     ctx.actions.run(
+         inputs = inputs,
+         outputs = [ctx.outputs.output],
+         arguments = [args],
+         progress_message = "Merging into %s" % ctx.outputs.output.short_path,
+         mnemonic = "JavaSingleJar",
+-        executable = ctx.executable._singlejar,
++        executable = toolchain.single_jar,
+         use_default_shell_env = True,
+     )
+ 
+@@ -121,16 +123,11 @@ java_single_jar = rule(
+         "exclude_pattern": attr.string(default = "", doc = """
+             A regex pattern of files to exclude from the jar.
+         """),
+-        "_singlejar": attr.label(
+-            default = Label("//toolchains:singlejar"),
+-            cfg = "exec",
+-            allow_single_file = True,
+-            executable = True,
+-        ),
+         "output": attr.output(),
+     },
+     initializer = _init,
+     implementation = _java_single_jar,
++    toolchains = [semantics.JAVA_TOOLCHAIN],
+     doc = """
+ Collects Java dependencies and jar files into a single jar
+ 
