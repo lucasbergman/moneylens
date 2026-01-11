@@ -2,7 +2,9 @@ package com.moneydance.modules.features.moneylens
 
 import com.moneydance.apps.md.controller.FeatureModule
 import java.io.File
-import javax.swing.SwingUtilities
+import java.io.FileWriter
+import java.time.Period
+import javax.swing.JOptionPane
 
 private const val URI = "moneylens:hello"
 
@@ -29,7 +31,27 @@ class Main : FeatureModule() {
      */
     override fun invoke(uri: String) {
         if (uri != URI) return
-        MainDialog().isVisible = true
+        MainDialog(::onExport).isVisible = true
+    }
+
+    private fun onExport(f: File) {
+        if (context == null) throw IllegalStateException("Null context")
+        val book = context.currentAccountBook
+        if (book == null) {
+            System.err.println("No account book open")
+            return
+        }
+
+        try {
+            val export = Exporter(book).export(Period.ofDays(10))
+            FileWriter(f).use { writer ->
+                writer.write(export.toString())
+            }
+        } catch (e: Exception) {
+            System.err.println("Exception on export: ${e.message}")
+            e.printStackTrace(System.err)
+        }
+        JOptionPane.showMessageDialog(null, "Export successful!")
     }
 
     /**

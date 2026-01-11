@@ -2,15 +2,21 @@ package com.moneydance.modules.features.moneylens
 
 import java.awt.FlowLayout
 import java.awt.Frame
+import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.swing.BorderFactory.createEmptyBorder
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JDialog
+import javax.swing.JFileChooser
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-class MainDialog : JDialog(null as Frame?, "Money Lens") {
+class MainDialog(
+    onExport: (File) -> Unit,
+) : JDialog(null as Frame?, "Money Lens") {
     init {
         val panel = JPanel()
         panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
@@ -25,7 +31,15 @@ class MainDialog : JDialog(null as Frame?, "Money Lens") {
         buttonPanel.layout = FlowLayout(FlowLayout.CENTER)
 
         val exportButton = JButton("Export...")
-        exportButton.isEnabled = false
+        exportButton.addActionListener {
+            val fileChooser = JFileChooser()
+            val date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
+            fileChooser.selectedFile = File("moneydance-export-$date.textproto")
+            if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                onExport(fileChooser.selectedFile)
+                isVisible = false
+            }
+        }
         buttonPanel.add(exportButton)
 
         val importButton = JButton("Import...")

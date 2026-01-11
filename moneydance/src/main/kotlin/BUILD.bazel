@@ -3,12 +3,14 @@ load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 kt_jvm_library(
     name = "moneylens_lib",
     srcs = [
+        "Exporter.kt",
         "Main.kt",
         "MainDialog.kt",
     ],
     resources = ["//moneydance/src/main/resources"],
     visibility = ["//moneydance:__subpackages__"],
     deps = [
+        "//proto:transactions_java",
         "@moneydance_devkit//:lib",
     ],
 )
