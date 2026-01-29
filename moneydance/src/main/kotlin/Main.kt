@@ -31,7 +31,7 @@ class Main : FeatureModule() {
      */
     override fun invoke(uri: String) {
         if (uri != URI) return
-        MainDialog(::onExport).isVisible = true
+        MainDialog(::onExport, ::onImport).isVisible = true
     }
 
     private fun onExport(f: File) {
@@ -52,6 +52,37 @@ class Main : FeatureModule() {
             e.printStackTrace(System.err)
         }
         JOptionPane.showMessageDialog(null, "Export successful!")
+    }
+
+    private fun onImport(f: File) {
+        if (context == null) throw IllegalStateException("Null context")
+        val book = context.currentAccountBook
+        if (book == null) {
+            System.err.println("No account book open")
+            return
+        }
+
+        try {
+            val result = Importer(book).import(f)
+            val message =
+                buildString {
+                    append("Imported ${result.importedCount} transaction(s).")
+                    if (result.errors.isNotEmpty()) {
+                        append("\n\nErrors:\n")
+                        result.errors.forEach { append("• $it\n") }
+                    }
+                }
+            JOptionPane.showMessageDialog(null, message)
+        } catch (e: Exception) {
+            System.err.println("Exception on import: ${e.message}")
+            e.printStackTrace(System.err)
+            JOptionPane.showMessageDialog(
+                null,
+                "Import failed: ${e.message}",
+                "Import Error",
+                JOptionPane.ERROR_MESSAGE,
+            )
+        }
     }
 
     /**

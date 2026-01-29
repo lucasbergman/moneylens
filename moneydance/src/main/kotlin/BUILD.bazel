@@ -4,6 +4,7 @@ kt_jvm_library(
     name = "moneylens_lib",
     srcs = [
         "Exporter.kt",
+        "Importer.kt",
         "Main.kt",
         "MainDialog.kt",
     ],

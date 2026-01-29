@@ -13,9 +13,11 @@ import javax.swing.JDialog
 import javax.swing.JFileChooser
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.filechooser.FileNameExtensionFilter
 
 class MainDialog(
     onExport: (File) -> Unit,
+    onImport: (File) -> Unit,
 ) : JDialog(null as Frame?, "Money Lens") {
     init {
         val panel = JPanel()
@@ -43,7 +45,14 @@ class MainDialog(
         buttonPanel.add(exportButton)
 
         val importButton = JButton("Import...")
-        importButton.isEnabled = false
+        importButton.addActionListener {
+            val fileChooser = JFileChooser()
+            fileChooser.fileFilter = FileNameExtensionFilter("Text Proto Files", "textproto")
+            if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                onImport(fileChooser.selectedFile)
+                isVisible = false
+            }
+        }
         buttonPanel.add(importButton)
 
         buttonPanel.alignmentX = CENTER_ALIGNMENT
