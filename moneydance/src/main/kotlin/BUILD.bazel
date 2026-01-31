@@ -7,11 +7,16 @@ kt_jvm_library(
         "Importer.kt",
         "Main.kt",
         "MainDialog.kt",
+        "McpServer.kt",
     ],
     resources = ["//moneydance/src/main/resources"],
     visibility = ["//moneydance:__subpackages__"],
     deps = [
         "//proto:transactions_java",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:io_modelcontextprotocol_sdk_mcp",
+        "@maven//:org_eclipse_jetty_ee10_jetty_ee10_servlet",
+        "@maven//:org_eclipse_jetty_jetty_server",
         "@moneydance_devkit//:lib",
     ],
 )

@@ -12,6 +12,8 @@ private const val URI = "moneylens:hello"
  * A "Hello, World" sample Moneydance extension written in Kotlin.
  */
 class Main : FeatureModule() {
+    private val mcpServer = McpServer()
+
     /**
      * Called by Moneydance when the extension is loaded. This is where we register
      * the feature to be invoked, for example, from a menu item or toolbar button.
@@ -20,9 +22,14 @@ class Main : FeatureModule() {
         try {
             ensureStateDirectory()
             context!!.registerFeature(this, URI, null, "Money Lens")
+            mcpServer.start()
         } catch (e: Exception) {
             e.printStackTrace(System.err)
         }
+    }
+
+    override fun cleanup() {
+        mcpServer.stop()
     }
 
     /**
