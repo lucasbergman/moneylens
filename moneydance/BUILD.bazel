@@ -39,7 +39,7 @@ genrule(
             $(location :test-private-key) \
             99 \
             moneylens \
-            $(location :moneylens.jar)
+            $(location :moneylens.jar) 2>/dev/null
 
         mv s-moneylens.mxt $@
     """,
