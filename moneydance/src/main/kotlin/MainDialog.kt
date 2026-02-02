@@ -47,7 +47,7 @@ class MainDialog(
         val importButton = JButton("Import...")
         importButton.addActionListener {
             val fileChooser = JFileChooser()
-            fileChooser.fileFilter = FileNameExtensionFilter("Text Proto Files", "textproto")
+            fileChooser.fileFilter = FileNameExtensionFilter("JSON Files", "json")
             if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                 onImport(fileChooser.selectedFile)
                 isVisible = false
