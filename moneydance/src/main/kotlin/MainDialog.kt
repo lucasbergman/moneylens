@@ -36,7 +36,7 @@ class MainDialog(
         exportButton.addActionListener {
             val fileChooser = JFileChooser()
             val date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-            fileChooser.selectedFile = File("moneydance-export-$date.textproto")
+            fileChooser.selectedFile = File("moneydance-export-$date.json")
             if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
                 onExport(fileChooser.selectedFile)
                 isVisible = false

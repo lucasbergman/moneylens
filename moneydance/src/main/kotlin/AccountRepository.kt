@@ -16,21 +16,37 @@ data class AccountModel(
     val inactive: Boolean,
 )
 
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class SplitModel(
     val categoryId: String,
-    val amount: Double,
+    val amount: Long,
     val memo: String?,
+    val tags: List<String>?,
 )
 
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class TransactionModel(
     val date: String,
+    val taxDate: String?,
     val description: String,
     val accountId: String,
-    val amount: Double,
+    val amount: Long,
+    val status: String?,
     val memo: String?,
     val checkNumber: String?,
+    val tags: List<String>?,
+    val attachments: List<String>?,
     val categoryId: String?,
     val splits: List<SplitModel>?,
+)
+
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class ExportModel(
+    val accounts: List<AccountModel>,
+    val transactions: List<TransactionModel>,
 )
 
 interface AccountRepository {

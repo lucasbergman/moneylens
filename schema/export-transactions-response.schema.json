@@ -1,0 +1,91 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://moneylens.bergman.house/schema/export-transactions-response.json",
+    "title": "ExportTransactionsResponse",
+    "type": "object",
+    "properties": {
+        "accounts": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/account" }
+        },
+        "transactions": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/transaction" }
+        }
+    },
+    "required": ["accounts", "transactions"],
+    "$defs": {
+        "account": {
+            "title": "Account",
+            "description": "A Moneydance account (bank, credit card, investment, etc.)",
+            "type": "object",
+            "properties": {
+                "id": { "type": "string", "description": "UUID" },
+                "name": { "type": "string", "description": "Display name" },
+                "full_name": { "type": "string", "description": "Hierarchical path" },
+                "type": { "$ref": "#/$defs/account_type" },
+                "currency_code": {
+                    "type": "string",
+                    "description": "ISO 4217 code or ticker"
+                },
+                "parent_id": { "type": "string", "description": "Parent account UUID" },
+                "inactive": { "type": "boolean" }
+            },
+            "required": ["id", "name", "full_name", "type", "currency_code"]
+        },
+        "account_type": {
+            "type": "string",
+            "enum": [
+                "bank",
+                "credit_card",
+                "investment",
+                "security",
+                "asset",
+                "liability",
+                "loan",
+                "expense",
+                "income"
+            ]
+        },
+        "transaction": {
+            "title": "Transaction",
+            "description": "A financial transaction (ParentTxn in Moneydance)",
+            "type": "object",
+            "properties": {
+                "date": { "type": "string", "format": "date" },
+                "tax_date": { "type": "string", "format": "date" },
+                "description": { "type": "string" },
+                "account_id": {
+                    "type": "string",
+                    "description": "Primary account UUID"
+                },
+                "amount": { "type": "integer", "description": "Net amount in cents" },
+                "status": { "$ref": "#/$defs/status" },
+                "memo": { "type": "string" },
+                "check_number": { "type": "string" },
+                "tags": { "type": "array", "items": { "type": "string" } },
+                "attachments": { "type": "array", "items": { "type": "string" } },
+                "category_id": {
+                    "type": "string",
+                    "description": "Contra-account UUID (simple txn)"
+                },
+                "splits": { "type": "array", "items": { "$ref": "#/$defs/split" } }
+            },
+            "required": ["date", "description", "account_id", "amount"]
+        },
+        "status": {
+            "type": "string",
+            "enum": ["cleared", "reconciling", "unreconciled"]
+        },
+        "split": {
+            "type": "object",
+            "properties": {
+                "category_id": { "type": "string" },
+                "amount": { "type": "integer", "description": "Amount in cents" },
+                "memo": { "type": "string" },
+                "tags": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["category_id", "amount"]
+        }
+    }
+}

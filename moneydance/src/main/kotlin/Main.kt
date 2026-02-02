@@ -1,8 +1,9 @@
 package com.moneydance.modules.features.moneylens
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.moneydance.apps.md.controller.FeatureModule
 import java.io.File
-import java.io.FileWriter
 import java.time.Period
 import javax.swing.JOptionPane
 
@@ -54,9 +55,8 @@ class Main : FeatureModule() {
 
         try {
             val export = Exporter(book).export(Period.ofDays(10))
-            FileWriter(f).use { writer ->
-                writer.write(export.toString())
-            }
+            val mapper = ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT)
+            mapper.writeValue(f, export)
         } catch (e: Exception) {
             System.err.println("Exception on export: ${e.message}")
             e.printStackTrace(System.err)
