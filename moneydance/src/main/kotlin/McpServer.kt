@@ -1,9 +1,10 @@
 package com.moneydance.modules.features.moneylens
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.moneydance.modules.features.moneylens.tools.HelloTool
+import com.moneydance.modules.features.moneylens.tools.ListAccountsTool
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper
 import io.modelcontextprotocol.json.schema.jackson.DefaultJsonSchemaValidator
-import io.modelcontextprotocol.server.McpServerFeatures
 import io.modelcontextprotocol.server.McpSyncServer
 import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider
 import io.modelcontextprotocol.spec.McpSchema
@@ -13,7 +14,10 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import io.modelcontextprotocol.server.McpServer as McpServerFactory
 
-class McpServer {
+class McpServer(
+    private val accountRepository: AccountRepository,
+    private val port: Int = 51234,
+) {
     private var jettyServer: Server? = null
     private var mcpSyncServer: McpSyncServer? = null
 
@@ -27,21 +31,7 @@ class McpServer {
                 .mcpEndpoint("/mcp")
                 .build()
 
-        val helloTool =
-            McpServerFeatures.SyncToolSpecification(
-                McpSchema.Tool(
-                    "hello",
-                    null,
-                    "Says hello from Money Lens",
-                    McpSchema.JsonSchema("object", emptyMap(), emptyList(), false, null, null),
-                    null,
-                    null,
-                    null,
-                ),
-                null,
-            ) { _, _ ->
-                McpSchema.CallToolResult(listOf(McpSchema.TextContent("Hello from Money Lens!")), false)
-            }
+        val listAccountsTool = ListAccountsTool(accountRepository, jsonObjectMapper).spec
 
         mcpSyncServer =
             McpServerFactory
@@ -52,12 +42,9 @@ class McpServer {
                         .builder()
                         .tools(true)
                         .build(),
-                )
-                // Provide both directly to avoid ServiceLoader, which fails
-                // under Moneydance's parent-first extension classloader.
-                .jsonMapper(JacksonMcpJsonMapper(jsonObjectMapper))
+                ).jsonMapper(JacksonMcpJsonMapper(jsonObjectMapper))
                 .jsonSchemaValidator(DefaultJsonSchemaValidator(jsonObjectMapper))
-                .tools(helloTool)
+                .tools(HelloTool.specification, listAccountsTool)
                 .build()
 
         jettyServer =
@@ -65,7 +52,7 @@ class McpServer {
                 addConnector(
                     ServerConnector(this).apply {
                         host = "127.0.0.1"
-                        port = 51234
+                        port = this@McpServer.port
                     },
                 )
                 handler =
@@ -75,7 +62,7 @@ class McpServer {
                 start()
             }
 
-        System.err.println("MCP server started on http://127.0.0.1:51234/mcp")
+        System.err.println("MCP server started on http://127.0.0.1:$port/mcp")
     }
 
     fun stop() {

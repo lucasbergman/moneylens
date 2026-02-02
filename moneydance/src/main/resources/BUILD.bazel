@@ -1,5 +1,25 @@
+genrule(
+    name = "json_schema_files",
+    srcs = [
+        "//schema:list-accounts-request.schema.json",
+        "//schema:list-accounts-response.schema.json",
+    ],
+    outs = [
+        "com/moneydance/modules/features/moneylens/schema/list-accounts-request.schema.json",
+        "com/moneydance/modules/features/moneylens/schema/list-accounts-response.schema.json",
+    ],
+    cmd = """
+        mkdir -p $(RULEDIR)/com/moneydance/modules/features/moneylens/schema
+        cp $(location //schema:list-accounts-request.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
+        cp $(location //schema:list-accounts-response.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
+    """,
+)
+
 filegroup(
     name = "resources",
-    srcs = ["meta_info.dict"],
+    srcs = [
+        "meta_info.dict",
+        ":json_schema_files",
+    ],
     visibility = ["//moneydance:__subpackages__"],
 )

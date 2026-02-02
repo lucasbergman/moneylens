@@ -12,7 +12,10 @@ private const val URI = "moneylens:hello"
  * A "Hello, World" sample Moneydance extension written in Kotlin.
  */
 class Main : FeatureModule() {
-    private val mcpServer = McpServer()
+    private val mcpServer =
+        McpServer(
+            MoneydanceAccountRepository { context.currentAccountBook },
+        )
 
     /**
      * Called by Moneydance when the extension is loaded. This is where we register

@@ -1,0 +1,46 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://moneylens.bergman.house/schema/list-accounts-response.json",
+    "title": "ListAccountsResponse",
+    "type": "object",
+    "properties": {
+        "accounts": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/account" }
+        }
+    },
+    "required": ["accounts"],
+    "$defs": {
+        "account": {
+            "title": "Account",
+            "description": "A Moneydance account (bank, credit card, investment, etc.)",
+            "type": "object",
+            "properties": {
+                "id": { "type": "string", "description": "UUID" },
+                "name": { "type": "string", "description": "Display name" },
+                "full_name": { "type": "string", "description": "Hierarchical path" },
+                "type": { "$ref": "#/$defs/account_type" },
+                "currency_code": {
+                    "type": "string",
+                    "description": "ISO 4217 code or ticker"
+                },
+                "parent_id": { "type": "string", "description": "Parent account UUID" }
+            },
+            "required": ["id", "name", "full_name", "type", "currency_code"]
+        },
+        "account_type": {
+            "type": "string",
+            "enum": [
+                "bank",
+                "credit_card",
+                "investment",
+                "security",
+                "asset",
+                "liability",
+                "loan",
+                "expense",
+                "income"
+            ]
+        }
+    }
+}
