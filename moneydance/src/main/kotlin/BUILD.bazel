@@ -16,7 +16,6 @@ kt_jvm_library(
     resources = ["//moneydance/src/main/resources"],
     visibility = ["//moneydance:__subpackages__"],
     deps = [
-        "//proto:transactions_java",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:io_modelcontextprotocol_sdk_mcp",
         "@maven//:org_eclipse_jetty_ee10_jetty_ee10_servlet",

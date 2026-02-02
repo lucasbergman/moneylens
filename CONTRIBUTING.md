@@ -36,11 +36,12 @@ This formats all supported files (Nix, Kotlin, etc.) in place.
 - The project uses [ktlint](https://ktlint.github.io/) via the Nix formatter
 - Prefer explicit types for public API, inferred types are fine for local variables
 
-### Protobuf Style
+### JSON Schema Style
 
 - Use `snake_case` for field names
-- Use `SCREAMING_SNAKE_CASE` for enum values
-- Prefix enum values with the enum name (e.g., `STATUS_CLEARED` in `Status`)
+- Amounts are integer cents (matching Moneydance internals)
+- Schemas live in `schema/` and are self-contained (use `$defs`, not `$ref` to external
+  files)
 
 ## Project Structure
 
@@ -49,5 +50,5 @@ This formats all supported files (Nix, Kotlin, etc.) in place.
 ├── docs/                # Documentation
 ├── moneydance/          # Moneydance extension (Kotlin)
 ├── nix/                 # Nix extras
-└── proto/               # Protocol buffer definitions
+└── schema/              # JSON schema definitions
 ```
