@@ -13,6 +13,7 @@ kt_jvm_library(
         "tools/GetTransactionsTool.kt",
         "tools/HelloTool.kt",
         "tools/ListAccountsTool.kt",
+        "tools/SchemaLoader.kt",
     ],
     resources = ["//moneydance/src/main/resources"],
     visibility = ["//moneydance:__subpackages__"],

@@ -1,29 +1,16 @@
 package com.moneydance.modules.features.moneylens.tools
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.moneydance.modules.features.moneylens.AccountRepository
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
-import java.io.InputStream
 
 class ListAccountsTool(
     private val accountRepository: AccountRepository,
-    private val objectMapper: ObjectMapper,
+    objectMapper: ObjectMapper,
 ) {
-    private val inputSchema =
-        loadSchemaResource("list-accounts-request.schema.json") {
-            objectMapper
-                .reader()
-                .without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .readValue(it, McpSchema.JsonSchema::class.java)
-        }
-
-    private val outputSchema =
-        loadSchemaResource("list-accounts-response.schema.json") {
-            objectMapper.readValue(it, object : TypeReference<Map<String, Any>>() {})
-        }
+    private val inputSchema = SchemaLoader.loadInputSchema(objectMapper, "list-accounts-request.schema.json")
+    private val outputSchema = SchemaLoader.loadOutputSchema(objectMapper, "list-accounts-response.schema.json")
 
     val spec: SyncToolSpecification by lazy {
         SyncToolSpecification
@@ -51,13 +38,4 @@ class ListAccountsTool(
                     .build()
             }.build()
     }
-
-    private fun <T> loadSchemaResource(
-        fileName: String,
-        parser: (InputStream) -> T,
-    ): T =
-        javaClass
-            .getResourceAsStream("/com/moneydance/modules/features/moneylens/schema/$fileName")
-            ?.use(parser)
-            ?: error("Could not find $fileName")
 }
