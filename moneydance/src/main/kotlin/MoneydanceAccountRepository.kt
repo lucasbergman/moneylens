@@ -1,8 +1,11 @@
 package com.moneydance.modules.features.moneylens
 
+import com.infinitekind.moneydance.model.AbstractTxn
 import com.infinitekind.moneydance.model.Account
 import com.infinitekind.moneydance.model.Account.AccountType
 import com.infinitekind.moneydance.model.AccountBook
+import com.infinitekind.moneydance.model.ParentTxn
+import com.infinitekind.moneydance.model.SplitTxn
 
 class MoneydanceAccountRepository(
     private val accountBookSupplier: () -> AccountBook?,
@@ -67,6 +70,86 @@ class MoneydanceAccountRepository(
             result.addAll(collectAccounts(account.getSubAccount(i)))
         }
         return result
+    }
+
+    override fun getTransactions(
+        accountId: String,
+        afterDateInt: Int,
+        description: String?,
+    ): List<TransactionModel> {
+        val book = accountBookSupplier() ?: return emptyList()
+        val account = findAccountByUuid(book.rootAccount, accountId) ?: return emptyList()
+
+        return book.transactionSet
+            .getTransactionsForAccount(account)
+            .filterIsInstance<ParentTxn>()
+            .filter { it.dateInt >= afterDateInt }
+            .let { txns ->
+                if (description != null) {
+                    txns.filter { it.description.contains(description, ignoreCase = true) }
+                } else {
+                    txns
+                }
+            }.map(::toTransactionModel)
+    }
+
+    private fun findAccountByUuid(
+        account: Account,
+        uuid: String,
+    ): Account? {
+        if (account.uuid == uuid) return account
+        for (i in 0 until account.subAccountCount) {
+            val found = findAccountByUuid(account.getSubAccount(i), uuid)
+            if (found != null) return found
+        }
+        return null
+    }
+
+    private fun toTransactionModel(txn: ParentTxn): TransactionModel {
+        val tags = txn.keywords.toList().ifEmpty { null }
+        val taxDate =
+            if (txn.taxDateInt != txn.dateInt) formatDate(txn.taxDateInt) else null
+        val splits =
+            (0 until txn.splitCount).map { i -> toSplitModel(txn.getSplit(i)) }
+
+        return TransactionModel(
+            date = formatDate(txn.dateInt),
+            taxDate = taxDate,
+            description = txn.description,
+            accountId = txn.account.uuid,
+            amount = txn.value,
+            status = toStatus(txn.status),
+            memo = txn.memo?.ifEmpty { null },
+            checkNumber = txn.checkNumber?.ifEmpty { null },
+            tags = tags,
+            attachments = null,
+            categoryId = null,
+            splits = splits.ifEmpty { null },
+        )
+    }
+
+    private fun toSplitModel(split: SplitTxn): SplitModel {
+        val tags = split.keywords.toList().ifEmpty { null }
+        return SplitModel(
+            categoryId = split.account.uuid,
+            amount = split.value,
+            memo = split.description?.ifEmpty { null },
+            tags = tags,
+        )
+    }
+
+    private fun toStatus(status: Byte): String? =
+        when (status) {
+            AbstractTxn.STATUS_CLEARED -> "cleared"
+            AbstractTxn.STATUS_RECONCILING -> "reconciling"
+            AbstractTxn.STATUS_UNRECONCILED -> "unreconciled"
+            else -> null
+        }
+
+    private fun formatDate(dateInt: Int): String {
+        val s = dateInt.toString()
+        if (s.length != 8) return s
+        return "${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)}"
     }
 
     private fun accountTypeString(type: AccountType): String =

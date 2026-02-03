@@ -51,4 +51,10 @@ data class ExportModel(
 
 interface AccountRepository {
     fun listAccounts(types: Set<String>? = null): List<AccountModel>
+
+    fun getTransactions(
+        accountId: String,
+        afterDateInt: Int,
+        description: String? = null,
+    ): List<TransactionModel>
 }

@@ -10,6 +10,7 @@ kt_jvm_library(
         "MainDialog.kt",
         "McpServer.kt",
         "MoneydanceAccountRepository.kt",
+        "tools/GetTransactionsTool.kt",
         "tools/HelloTool.kt",
         "tools/ListAccountsTool.kt",
     ],

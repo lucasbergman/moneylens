@@ -1,0 +1,55 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://moneylens.bergman.house/schema/get-transactions-response.json",
+    "title": "GetTransactionsResponse",
+    "type": "object",
+    "properties": {
+        "transactions": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/transaction" }
+        }
+    },
+    "required": ["transactions"],
+    "$defs": {
+        "transaction": {
+            "title": "Transaction",
+            "description": "A financial transaction (ParentTxn in Moneydance)",
+            "type": "object",
+            "properties": {
+                "date": { "type": "string", "format": "date" },
+                "tax_date": { "type": "string", "format": "date" },
+                "description": { "type": "string" },
+                "account_id": {
+                    "type": "string",
+                    "description": "Primary account UUID"
+                },
+                "amount": { "type": "integer", "description": "Net amount in cents" },
+                "status": { "$ref": "#/$defs/status" },
+                "memo": { "type": "string" },
+                "check_number": { "type": "string" },
+                "tags": { "type": "array", "items": { "type": "string" } },
+                "attachments": { "type": "array", "items": { "type": "string" } },
+                "category_id": {
+                    "type": "string",
+                    "description": "Contra-account UUID (simple txn)"
+                },
+                "splits": { "type": "array", "items": { "$ref": "#/$defs/split" } }
+            },
+            "required": ["date", "description", "account_id", "amount"]
+        },
+        "status": {
+            "type": "string",
+            "enum": ["cleared", "reconciling", "unreconciled"]
+        },
+        "split": {
+            "type": "object",
+            "properties": {
+                "category_id": { "type": "string" },
+                "amount": { "type": "integer", "description": "Amount in cents" },
+                "memo": { "type": "string" },
+                "tags": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["category_id", "amount"]
+        }
+    }
+}

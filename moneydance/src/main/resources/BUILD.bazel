@@ -2,17 +2,23 @@ genrule(
     name = "json_schema_files",
     srcs = [
         "//schema:export-transactions-response.schema.json",
+        "//schema:get-transactions-request.schema.json",
+        "//schema:get-transactions-response.schema.json",
         "//schema:list-accounts-request.schema.json",
         "//schema:list-accounts-response.schema.json",
     ],
     outs = [
         "com/moneydance/modules/features/moneylens/schema/export-transactions-response.schema.json",
+        "com/moneydance/modules/features/moneylens/schema/get-transactions-request.schema.json",
+        "com/moneydance/modules/features/moneylens/schema/get-transactions-response.schema.json",
         "com/moneydance/modules/features/moneylens/schema/list-accounts-request.schema.json",
         "com/moneydance/modules/features/moneylens/schema/list-accounts-response.schema.json",
     ],
     cmd = """
         mkdir -p $(RULEDIR)/com/moneydance/modules/features/moneylens/schema
         cp $(location //schema:export-transactions-response.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
+        cp $(location //schema:get-transactions-request.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
+        cp $(location //schema:get-transactions-response.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
         cp $(location //schema:list-accounts-request.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
         cp $(location //schema:list-accounts-response.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
     """,

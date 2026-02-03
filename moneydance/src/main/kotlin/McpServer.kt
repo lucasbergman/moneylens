@@ -1,6 +1,7 @@
 package com.moneydance.modules.features.moneylens
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.moneydance.modules.features.moneylens.tools.GetTransactionsTool
 import com.moneydance.modules.features.moneylens.tools.HelloTool
 import com.moneydance.modules.features.moneylens.tools.ListAccountsTool
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper
@@ -32,6 +33,7 @@ class McpServer(
                 .build()
 
         val listAccountsTool = ListAccountsTool(accountRepository, jsonObjectMapper).spec
+        val getTransactionsTool = GetTransactionsTool(accountRepository, jsonObjectMapper).spec
 
         mcpSyncServer =
             McpServerFactory
@@ -44,7 +46,7 @@ class McpServer(
                         .build(),
                 ).jsonMapper(JacksonMcpJsonMapper(jsonObjectMapper))
                 .jsonSchemaValidator(DefaultJsonSchemaValidator(jsonObjectMapper))
-                .tools(HelloTool.specification, listAccountsTool)
+                .tools(HelloTool.specification, listAccountsTool, getTransactionsTool)
                 .build()
 
         jettyServer =

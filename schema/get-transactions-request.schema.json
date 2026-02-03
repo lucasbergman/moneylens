@@ -1,0 +1,23 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://moneylens.bergman.house/schema/get-transactions-request.json",
+    "title": "Get Transactions Request",
+    "description": "Arguments for retrieving transactions for an account",
+    "type": "object",
+    "properties": {
+        "account_id": {
+            "type": "string",
+            "description": "Account UUID"
+        },
+        "days": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Look-back period in days (default 30)"
+        },
+        "description": {
+            "type": "string",
+            "description": "Case-insensitive substring match on transaction description"
+        }
+    },
+    "required": ["account_id"]
+}
