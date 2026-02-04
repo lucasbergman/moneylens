@@ -7,6 +7,7 @@ import com.moneydance.modules.features.moneylens.tools.CreateTransactionsTool
 import com.moneydance.modules.features.moneylens.tools.GetTransactionsTool
 import com.moneydance.modules.features.moneylens.tools.HelloTool
 import com.moneydance.modules.features.moneylens.tools.ListAccountsTool
+import com.moneydance.modules.features.moneylens.tools.ListCategoriesTool
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper
 import io.modelcontextprotocol.json.schema.jackson.DefaultJsonSchemaValidator
 import io.modelcontextprotocol.server.McpSyncServer
@@ -39,6 +40,7 @@ class McpServer(
                 .build()
 
         val listAccountsTool = ListAccountsTool(accountRepository, jsonObjectMapper).spec
+        val listCategoriesTool = ListCategoriesTool(accountRepository, jsonObjectMapper).spec
         val getTransactionsTool = GetTransactionsTool(accountRepository, jsonObjectMapper).spec
         val createTransactionsTool = CreateTransactionsTool(accountRepository, jsonObjectMapper).spec
 
@@ -56,6 +58,7 @@ class McpServer(
                 .tools(
                     HelloTool.specification,
                     listAccountsTool,
+                    listCategoriesTool,
                     getTransactionsTool,
                     createTransactionsTool,
                 ).build()

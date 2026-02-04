@@ -19,9 +19,11 @@ class MoneydanceAccountRepository(
             "asset" to AccountType.ASSET,
             "liability" to AccountType.LIABILITY,
             "loan" to AccountType.LOAN,
+            "expense" to AccountType.EXPENSE,
+            "income" to AccountType.INCOME,
         )
 
-    private val allowedAccountTypes =
+    private val accountTypes =
         setOf(
             AccountType.BANK,
             AccountType.CREDIT_CARD,
@@ -32,14 +34,26 @@ class MoneydanceAccountRepository(
             AccountType.LOAN,
         )
 
-    override fun listAccounts(types: Set<String>?): List<AccountModel> {
+    private val categoryTypes =
+        setOf(
+            AccountType.EXPENSE,
+            AccountType.INCOME,
+        )
+
+    override fun listAccounts(types: Set<String>?): List<AccountModel> = listByTypes(types, accountTypes)
+
+    override fun listCategories(types: Set<String>?): List<AccountModel> = listByTypes(types, categoryTypes)
+
+    private fun listByTypes(
+        types: Set<String>?,
+        allowed: Set<AccountType>,
+    ): List<AccountModel> {
         val book = accountBookSupplier() ?: return emptyList()
         val typeFilter = types?.mapNotNull { accountTypeFromString[it] }?.toSet()
-        val allAccounts = collectAccounts(book.rootAccount)
+        val allAccounts = collectAccounts(book.rootAccount, allowed)
 
         return allAccounts
             .filter { account ->
-                if (account.accountType !in allowedAccountTypes) return@filter false
                 if (typeFilter != null && account.accountType !in typeFilter) return@filter false
                 true
             }.map { account ->
@@ -60,14 +74,17 @@ class MoneydanceAccountRepository(
             }
     }
 
-    private fun collectAccounts(account: Account): List<Account> {
+    private fun collectAccounts(
+        account: Account,
+        allowed: Set<AccountType>,
+    ): List<Account> {
         val result = mutableListOf<Account>()
 
-        if (account.accountType in allowedAccountTypes) {
+        if (account.accountType in allowed) {
             result.add(account)
         }
         for (i in 0 until account.subAccountCount) {
-            result.addAll(collectAccounts(account.getSubAccount(i)))
+            result.addAll(collectAccounts(account.getSubAccount(i), allowed))
         }
         return result
     }

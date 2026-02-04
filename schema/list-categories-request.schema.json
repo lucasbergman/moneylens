@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://moneylens.bergman.house/schema/list-categories-request.json",
+    "title": "List Categories Request",
+    "description": "Arguments for listing categories",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "array",
+            "description": "Filter by category type(s). Omit to return all categories.",
+            "items": {
+                "type": "string",
+                "enum": ["expense", "income"]
+            }
+        }
+    }
+}

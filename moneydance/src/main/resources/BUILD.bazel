@@ -6,6 +6,8 @@ _SCHEMAS = [
     "get-transactions-response",
     "list-accounts-request",
     "list-accounts-response",
+    "list-categories-request",
+    "list-categories-response",
 ]
 
 _PKG = "com/moneydance/modules/features/moneylens/schema"
