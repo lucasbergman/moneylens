@@ -1,33 +1,20 @@
+_SCHEMAS = [
+    "create-transactions-request",
+    "create-transactions-response",
+    "export-transactions-response",
+    "get-transactions-request",
+    "get-transactions-response",
+    "list-accounts-request",
+    "list-accounts-response",
+]
+
+_PKG = "com/moneydance/modules/features/moneylens/schema"
+
 genrule(
     name = "json_schema_files",
-    srcs = [
-        "//schema:create-transactions-request.schema.json",
-        "//schema:create-transactions-response.schema.json",
-        "//schema:export-transactions-response.schema.json",
-        "//schema:get-transactions-request.schema.json",
-        "//schema:get-transactions-response.schema.json",
-        "//schema:list-accounts-request.schema.json",
-        "//schema:list-accounts-response.schema.json",
-    ],
-    outs = [
-        "com/moneydance/modules/features/moneylens/schema/create-transactions-request.schema.json",
-        "com/moneydance/modules/features/moneylens/schema/create-transactions-response.schema.json",
-        "com/moneydance/modules/features/moneylens/schema/export-transactions-response.schema.json",
-        "com/moneydance/modules/features/moneylens/schema/get-transactions-request.schema.json",
-        "com/moneydance/modules/features/moneylens/schema/get-transactions-response.schema.json",
-        "com/moneydance/modules/features/moneylens/schema/list-accounts-request.schema.json",
-        "com/moneydance/modules/features/moneylens/schema/list-accounts-response.schema.json",
-    ],
-    cmd = """
-        mkdir -p $(RULEDIR)/com/moneydance/modules/features/moneylens/schema
-        cp $(location //schema:create-transactions-request.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
-        cp $(location //schema:create-transactions-response.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
-        cp $(location //schema:export-transactions-response.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
-        cp $(location //schema:get-transactions-request.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
-        cp $(location //schema:get-transactions-response.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
-        cp $(location //schema:list-accounts-request.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
-        cp $(location //schema:list-accounts-response.schema.json) $(RULEDIR)/com/moneydance/modules/features/moneylens/schema/
-    """,
+    srcs = ["//schema:{}.schema.json".format(s) for s in _SCHEMAS],
+    outs = ["{}/{}.schema.json".format(_PKG, s) for s in _SCHEMAS],
+    cmd = "mkdir -p $(RULEDIR)/{pkg} && cp $(SRCS) $(RULEDIR)/{pkg}/".format(pkg = _PKG),
 )
 
 filegroup(
