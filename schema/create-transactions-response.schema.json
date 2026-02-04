@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://moneylens.bergman.house/schema/create-transactions-response.json",
+    "title": "CreateTransactionsResponse",
+    "type": "object",
+    "properties": {
+        "created_count": {
+            "type": "integer",
+            "description": "Number of transactions created"
+        }
+    },
+    "required": ["created_count"]
+}

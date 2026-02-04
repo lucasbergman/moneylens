@@ -93,6 +93,74 @@ class MoneydanceAccountRepository(
             }.map(::toTransactionModel)
     }
 
+    override fun createTransactions(transactions: List<TransactionModel>) {
+        val book = accountBookSupplier() ?: return
+
+        for (txnModel in transactions) {
+            val account = findAccountByUuid(book.rootAccount, txnModel.accountId) ?: continue
+            val dateInt = parseDate(txnModel.date)
+            val taxDateInt = txnModel.taxDate?.let { parseDate(it) } ?: dateInt
+
+            val pTxn =
+                ParentTxn.makeParentTxn(
+                    book,
+                    dateInt,
+                    taxDateInt,
+                    -1L,
+                    txnModel.checkNumber ?: "",
+                    account,
+                    txnModel.description,
+                    txnModel.memo ?: "",
+                    -1L,
+                    txnModel.status?.let { parseStatus(it) } ?: AbstractTxn.STATUS_UNRECONCILED,
+                )
+
+            if (!txnModel.splits.isNullOrEmpty()) {
+                for (splitModel in txnModel.splits) {
+                    val category =
+                        findAccountByUuid(book.rootAccount, splitModel.categoryId) ?: continue
+                    val sTxn =
+                        SplitTxn.makeSplitTxn(
+                            pTxn,
+                            splitModel.amount,
+                            1.0,
+                            category,
+                            splitModel.memo ?: "",
+                            -1L,
+                            AbstractTxn.STATUS_UNRECONCILED,
+                        )
+                    pTxn.addSplit(sTxn)
+                }
+            } else if (txnModel.categoryId != null) {
+                val category =
+                    findAccountByUuid(book.rootAccount, txnModel.categoryId) ?: continue
+                val sTxn =
+                    SplitTxn.makeSplitTxn(
+                        pTxn,
+                        txnModel.amount,
+                        1.0,
+                        category,
+                        txnModel.memo ?: "",
+                        -1L,
+                        txnModel.status?.let { parseStatus(it) } ?: AbstractTxn.STATUS_UNRECONCILED,
+                    )
+                pTxn.addSplit(sTxn)
+            }
+
+            book.transactionSet.addNewTxn(pTxn)
+        }
+    }
+
+    private fun parseDate(date: String): Int = date.replace("-", "").toInt()
+
+    private fun parseStatus(status: String): Byte =
+        when (status.lowercase()) {
+            "cleared" -> AbstractTxn.STATUS_CLEARED
+            "reconciling" -> AbstractTxn.STATUS_RECONCILING
+            "unreconciled" -> AbstractTxn.STATUS_UNRECONCILED
+            else -> AbstractTxn.STATUS_UNRECONCILED
+        }
+
     private fun findAccountByUuid(
         account: Account,
         uuid: String,

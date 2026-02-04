@@ -57,4 +57,6 @@ interface AccountRepository {
         afterDateInt: Int,
         description: String? = null,
     ): List<TransactionModel>
+
+    fun createTransactions(transactions: List<TransactionModel>)
 }

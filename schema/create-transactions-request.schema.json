@@ -1,0 +1,93 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://moneylens.bergman.house/schema/create-transactions-request.json",
+    "title": "Create Transactions Request",
+    "description": "Arguments for creating new transactions",
+    "type": "object",
+    "properties": {
+        "transactions": {
+            "type": "array",
+            "description": "List of transactions to create",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "description": "Transaction date in YYYY-MM-DD format"
+                    },
+                    "tax_date": {
+                        "type": "string",
+                        "description": "Tax date in YYYY-MM-DD format. Defaults to transaction date."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Payee or description of the transaction"
+                    },
+                    "account_id": {
+                        "type": "string",
+                        "description": "UUID of the primary account for this transaction"
+                    },
+                    "amount": {
+                        "type": "integer",
+                        "description": "Amount in cents (e.g., -1050 for -$10.50 expense, 10000 for $100.00 deposit)"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["cleared", "reconciling", "unreconciled"],
+                        "description": "Clearing status of the transaction"
+                    },
+                    "memo": {
+                        "type": "string",
+                        "description": "Additional notes or memo"
+                    },
+                    "check_number": {
+                        "type": "string",
+                        "description": "Check number if applicable"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "List of tags/keywords"
+                    },
+                    "category_id": {
+                        "type": "string",
+                        "description": "UUID of the category or transfer account. Required for simple transactions (no splits)."
+                    },
+                    "splits": {
+                        "type": "array",
+                        "description": "List of splits for complex transactions. If provided, category_id on the main object is ignored.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "category_id": {
+                                    "type": "string",
+                                    "description": "UUID of the category or transfer account for this split"
+                                },
+                                "amount": {
+                                    "type": "integer",
+                                    "description": "Amount for this split in cents. Signs should follow double-entry logic relative to the main amount."
+                                },
+                                "memo": {
+                                    "type": "string",
+                                    "description": "Memo for this split"
+                                },
+                                "tags": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "List of tags/keywords for this split"
+                                }
+                            },
+                            "required": ["category_id", "amount"]
+                        }
+                    }
+                },
+                "required": ["date", "description", "account_id", "amount"]
+            }
+        }
+    },
+    "required": ["transactions"]
+}

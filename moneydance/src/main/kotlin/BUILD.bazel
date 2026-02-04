@@ -10,6 +10,7 @@ kt_jvm_library(
         "MainDialog.kt",
         "McpServer.kt",
         "MoneydanceAccountRepository.kt",
+        "tools/CreateTransactionsTool.kt",
         "tools/GetTransactionsTool.kt",
         "tools/HelloTool.kt",
         "tools/ListAccountsTool.kt",
@@ -19,6 +20,7 @@ kt_jvm_library(
     visibility = ["//moneydance:__subpackages__"],
     deps = [
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_module_jackson_module_kotlin",
         "@maven//:io_modelcontextprotocol_sdk_mcp",
         "@maven//:org_eclipse_jetty_ee10_jetty_ee10_servlet",
         "@maven//:org_eclipse_jetty_jetty_server",
