@@ -17,6 +17,7 @@ import org.eclipse.jetty.ee10.servlet.ServletContextHandler
 import org.eclipse.jetty.ee10.servlet.ServletHolder
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
+import kotlin.time.Duration.Companion.seconds
 import io.modelcontextprotocol.server.McpServer as McpServerFactory
 
 class McpServer(
@@ -65,6 +66,7 @@ class McpServer(
 
         jettyServer =
             Server().apply {
+                stopTimeout = 3.seconds.inWholeMilliseconds
                 addConnector(
                     ServerConnector(this).apply {
                         host = "127.0.0.1"
@@ -84,6 +86,8 @@ class McpServer(
     fun stop() {
         mcpSyncServer?.close()
         jettyServer?.stop()
+        jettyServer?.join()
+        jettyServer?.destroy()
         mcpSyncServer = null
         jettyServer = null
     }

@@ -33,9 +33,13 @@ class Main : FeatureModule() {
         }
     }
 
-    override fun cleanup() {
+    private fun cleanupInternal() {
         mcpServer.stop()
     }
+
+    override fun unload() = cleanupInternal()
+
+    override fun cleanup() = cleanupInternal()
 
     /**
      * Called by Moneydance when the user selects our feature. The 'uri' is the
