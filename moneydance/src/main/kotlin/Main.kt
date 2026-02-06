@@ -12,6 +12,7 @@ private const val URI = "moneylens:hello"
 /**
  * A "Hello, World" sample Moneydance extension written in Kotlin.
  */
+@Suppress("unused")
 class Main : FeatureModule() {
     private val mcpServer =
         McpServer(
