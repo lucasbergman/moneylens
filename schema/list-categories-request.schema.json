@@ -12,6 +12,19 @@
                 "type": "string",
                 "enum": ["expense", "income"]
             }
+        },
+        "name": {
+            "type": "string",
+            "description": "Case-insensitive substring match on category name."
+        },
+        "id": {
+            "type": "string",
+            "description": "Exact UUID lookup. Returns at most one category."
+        },
+        "limit": {
+            "type": "integer",
+            "description": "Maximum number of categories to return.",
+            "minimum": 1
         }
     }
 }

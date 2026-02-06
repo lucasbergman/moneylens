@@ -22,6 +22,19 @@
                     "income"
                 ]
             }
+        },
+        "name": {
+            "type": "string",
+            "description": "Case-insensitive substring match on account name."
+        },
+        "id": {
+            "type": "string",
+            "description": "Exact UUID lookup. Returns at most one account."
+        },
+        "limit": {
+            "type": "integer",
+            "description": "Maximum number of accounts to return.",
+            "minimum": 1
         }
     }
 }

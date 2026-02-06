@@ -49,10 +49,17 @@ data class ExportModel(
     val transactions: List<TransactionModel>,
 )
 
-interface AccountRepository {
-    fun listAccounts(types: Set<String>? = null): List<AccountModel>
+data class AccountFilter(
+    val types: Set<String>? = null,
+    val name: String? = null,
+    val id: String? = null,
+    val limit: Int? = null,
+)
 
-    fun listCategories(types: Set<String>? = null): List<AccountModel>
+interface AccountRepository {
+    fun listAccounts(filter: AccountFilter = AccountFilter()): List<AccountModel>
+
+    fun listCategories(filter: AccountFilter = AccountFilter()): List<AccountModel>
 
     fun getTransactions(
         accountId: String,

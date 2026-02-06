@@ -40,21 +40,26 @@ class MoneydanceAccountRepository(
             AccountType.INCOME,
         )
 
-    override fun listAccounts(types: Set<String>?): List<AccountModel> = listByTypes(types, accountTypes)
+    override fun listAccounts(filter: AccountFilter): List<AccountModel> = listByFilter(filter, accountTypes)
 
-    override fun listCategories(types: Set<String>?): List<AccountModel> = listByTypes(types, categoryTypes)
+    override fun listCategories(filter: AccountFilter): List<AccountModel> = listByFilter(filter, categoryTypes)
 
-    private fun listByTypes(
-        types: Set<String>?,
+    private fun listByFilter(
+        filter: AccountFilter,
         allowed: Set<AccountType>,
     ): List<AccountModel> {
         val book = accountBookSupplier() ?: return emptyList()
-        val typeFilter = types?.mapNotNull { accountTypeFromString[it] }?.toSet()
+        val typeFilter = filter.types?.mapNotNull { accountTypeFromString[it] }?.toSet()
         val allAccounts = collectAccounts(book.rootAccount, allowed)
 
         return allAccounts
+            .asSequence()
             .filter { account ->
                 if (typeFilter != null && account.accountType !in typeFilter) return@filter false
+                if (filter.id != null && account.uuid != filter.id) return@filter false
+                if (filter.name != null && !account.accountName.contains(filter.name, ignoreCase = true)) {
+                    return@filter false
+                }
                 true
             }.map { account ->
                 AccountModel(
@@ -71,7 +76,9 @@ class MoneydanceAccountRepository(
                         },
                     inactive = account.accountIsInactive,
                 )
-            }
+            }.let { seq ->
+                if (filter.limit != null) seq.take(filter.limit) else seq
+            }.toList()
     }
 
     private fun collectAccounts(

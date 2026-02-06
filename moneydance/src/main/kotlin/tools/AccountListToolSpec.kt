@@ -1,6 +1,7 @@
 package com.moneydance.modules.features.moneylens.tools
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.moneydance.modules.features.moneylens.AccountFilter
 import com.moneydance.modules.features.moneylens.AccountModel
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
@@ -12,7 +13,7 @@ internal fun accountListSpec(
     responseSchemaFile: String,
     responseKey: String,
     objectMapper: ObjectMapper,
-    listFn: (Set<String>?) -> List<AccountModel>,
+    listFn: (AccountFilter) -> List<AccountModel>,
 ): SyncToolSpecification {
     val inputSchema = SchemaLoader.loadInputSchema(objectMapper, requestSchemaFile)
     val outputSchema = SchemaLoader.loadOutputSchema(objectMapper, responseSchemaFile)
@@ -28,12 +29,19 @@ internal fun accountListSpec(
                 .description(description)
                 .build(),
         ).callHandler { _, request ->
-            val typeFilter =
-                (request.arguments()?.get("type") as? List<*>)
-                    ?.filterIsInstance<String>()
-                    ?.toSet()
+            val args = request.arguments()
+            val filter =
+                AccountFilter(
+                    types =
+                        (args?.get("type") as? List<*>)
+                            ?.filterIsInstance<String>()
+                            ?.toSet(),
+                    name = args?.get("name") as? String,
+                    id = args?.get("id") as? String,
+                    limit = (args?.get("limit") as? Number)?.toInt(),
+                )
 
-            val results = listFn(typeFilter)
+            val results = listFn(filter)
             McpSchema.CallToolResult
                 .builder()
                 .structuredContent(mapOf(responseKey to results))
