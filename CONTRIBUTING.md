@@ -2,8 +2,12 @@
 
 ## Prerequisites
 
-This project uses Nix for reproducible development environments. Install Nix (with
-flakes enabled), then:
+This is early development, hackers only. Expect to do some messing around to get things
+to work.
+
+I use [NixOS](https://nixos.org/) on my computers and Nix for reproducible development
+environments. You don't have to use NixOS to use Nix tools. Install Nix (with flakes
+enabled), then:
 
 ```bash
 nix develop
@@ -11,15 +15,22 @@ nix develop
 
 This drops you into a shell with all required tools (Bazel, JDK, Kotlin, etc.).
 
+I think everything should work on normie Linux and other Unix as long as
+[Bazel](https://bazel.build/) is supported. I'm less certain about macOS and Windows,
+but there's a fighting chance. Patches are very welcome.
+
 ## Building
 
 Build the Moneydance extension:
 
 ```bash
+# Add --config=nix on NixOS
 bazel build //moneydance:moneylens_mxt
 ```
 
-The output is at `bazel-bin/moneydance/moneylens.mxt`.
+The output is at `bazel-bin/moneydance/moneylens.mxt`. The first build takes ages
+because it downloads lots of packages, including entire Java, Kotlin, and possibly C++
+toolchains. Subsequent builds are very fast.
 
 ## Code Formatting
 
