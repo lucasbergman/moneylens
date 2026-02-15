@@ -64,6 +64,7 @@ interface AccountRepository {
     fun getTransactions(
         accountId: String,
         afterDateInt: Int,
+        beforeDateInt: Int? = null,
         description: String? = null,
     ): List<TransactionModel>
 

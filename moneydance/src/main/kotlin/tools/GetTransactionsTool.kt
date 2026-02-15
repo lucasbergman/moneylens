@@ -32,18 +32,21 @@ class GetTransactionsTool(
                 val accountId =
                     args["account_id"] as? String
                         ?: error("account_id is required")
-                val days = (args["days"] as? Number)?.toInt() ?: 30
+                val minDate = args["min_date"] as? String
+                val maxDate = args["max_date"] as? String
                 val description = args["description"] as? String
 
                 val afterDateInt =
-                    LocalDate
-                        .now()
-                        .minusDays(days.toLong())
-                        .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-                        .toInt()
+                    (
+                        minDate?.replace("-", "") ?: LocalDate
+                            .now()
+                            .minusDays(30)
+                            .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                    ).toInt()
+                val beforeDateInt = maxDate?.replace("-", "")?.toInt()
 
                 val transactions =
-                    accountRepository.getTransactions(accountId, afterDateInt, description)
+                    accountRepository.getTransactions(accountId, afterDateInt, beforeDateInt, description)
 
                 McpSchema.CallToolResult
                     .builder()

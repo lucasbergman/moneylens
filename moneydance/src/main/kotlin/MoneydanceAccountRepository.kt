@@ -99,6 +99,7 @@ class MoneydanceAccountRepository(
     override fun getTransactions(
         accountId: String,
         afterDateInt: Int,
+        beforeDateInt: Int?,
         description: String?,
     ): List<TransactionModel> {
         val book = accountBookSupplier() ?: return emptyList()
@@ -107,7 +108,7 @@ class MoneydanceAccountRepository(
         return book.transactionSet
             .getTransactionsForAccount(account)
             .filterIsInstance<ParentTxn>()
-            .filter { it.dateInt >= afterDateInt }
+            .filter { it.dateInt >= afterDateInt && (beforeDateInt == null || it.dateInt <= beforeDateInt) }
             .let { txns ->
                 if (description != null) {
                     txns.filter { it.description.contains(description, ignoreCase = true) }
