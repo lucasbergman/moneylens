@@ -3,6 +3,7 @@ package com.moneydance.modules.features.moneylens
 import com.infinitekind.moneydance.model.AbstractTxn
 import com.infinitekind.moneydance.model.Account
 import com.infinitekind.moneydance.model.AccountBook
+import com.infinitekind.moneydance.model.InvestFields
 import com.infinitekind.moneydance.model.ParentTxn
 import com.infinitekind.moneydance.model.SplitTxn
 import java.time.LocalDate
@@ -53,6 +54,7 @@ class Exporter(
             fullName = account.fullAccountName,
             type = toAccountType(account.accountType),
             currencyCode = account.currencyType.idString,
+            decimalPlaces = account.currencyType.decimalPlaces,
             parentId = account.parentAccount?.uuid,
             inactive = account.accountIsInactive,
         )
@@ -79,6 +81,20 @@ class Exporter(
         val splits =
             (0 until txn.splitCount).map { i -> toSplitModel(txn.getSplit(i)) }
 
+        var shares: Long? = null
+        var price: Double? = null
+        var investAction: String? = null
+
+        if (txn.account.accountType == Account.AccountType.INVESTMENT) {
+            val investFields = InvestFields()
+            investFields.setFieldStatus(txn)
+            if (investFields.txnType != null) {
+                shares = investFields.shares
+                price = investFields.price
+                investAction = investFields.txnType.name
+            }
+        }
+
         return TransactionModel(
             date = formatDate(txn.dateInt),
             taxDate = taxDate,
@@ -92,6 +108,9 @@ class Exporter(
             attachments = null,
             categoryId = null,
             splits = splits.ifEmpty { null },
+            shares = shares,
+            price = price,
+            investAction = investAction,
         )
     }
 

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.infinitekind.moneydance.model.AbstractTxn
 import com.infinitekind.moneydance.model.Account
 import com.infinitekind.moneydance.model.AccountBook
+import com.infinitekind.moneydance.model.InvestFields
+import com.infinitekind.moneydance.model.InvestTxnType
 import com.infinitekind.moneydance.model.ParentTxn
 import com.infinitekind.moneydance.model.SplitTxn
 import java.io.File
@@ -52,25 +54,74 @@ class Importer(
                 fromStatus(txn.status),
             )
 
-        if (!txn.splits.isNullOrEmpty()) {
-            for (split in txn.splits) {
-                addSplit(parentTxn, split)
+        if (txn.investAction != null && account.accountType == Account.AccountType.INVESTMENT) {
+            val investFields = InvestFields()
+            val action =
+                try {
+                    InvestTxnType.valueOf(txn.investAction.uppercase())
+                } catch (e: Exception) {
+                    InvestTxnType.BANK
+                }
+            // setFieldStatus configures the InvestFields flags (hasSecurity, hasXfrAcct, etc)
+            // for the given action, but also populates defaults (like "Bills") that we
+            // want to override with our own candidates.
+            investFields.setFieldStatus(action, parentTxn)
+            investFields.security = null
+            investFields.xfrAcct = null
+            investFields.category = null
+            investFields.feeAcct = null
+
+            investFields.date = dateInt
+            investFields.taxDate = taxDateInt
+            investFields.shares = txn.shares ?: 0L
+            // Moneydance stores price as the reciprocal: shares per currency unit.
+            investFields.price = txn.price ?: 0.0
+            investFields.amount = txn.amount
+            investFields.memo = txn.memo ?: ""
+
+            // Map candidate accounts (from splits and category_id) to the appropriate investment fields.
+            val candidateAccounts =
+                (txn.splits?.mapNotNull { findAccountByUuid(it.categoryId) } ?: emptyList()) +
+                    listOfNotNull(txn.categoryId?.let { findAccountByUuid(it) })
+
+            for (acct in candidateAccounts) {
+                when {
+                    investFields.hasSecurity && investFields.security == null && acct.accountType == Account.AccountType.SECURITY ->
+                        investFields.security = acct
+                    investFields.hasXfrAcct && investFields.xfrAcct == null ->
+                        investFields.xfrAcct = acct
+                    investFields.hasCategory && investFields.category == null ->
+                        investFields.category = acct
+                }
             }
-        } else if (txn.categoryId != null) {
-            val category =
-                findAccountByUuid(txn.categoryId)
-                    ?: throw IllegalArgumentException("Category not found: ${txn.categoryId}")
-            val splitTxn =
-                SplitTxn.makeSplitTxn(
-                    parentTxn,
-                    txn.amount,
-                    1.0,
-                    category,
-                    txn.memo ?: "",
-                    -1L,
-                    fromStatus(txn.status),
-                )
-            parentTxn.addSplit(splitTxn)
+
+            // Fallback for BANK transactions to ensure the transfer account is set.
+            if (action == InvestTxnType.BANK && investFields.xfrAcct == null) {
+                investFields.xfrAcct = candidateAccounts.firstOrNull()
+            }
+
+            investFields.storeFields(parentTxn)
+        } else {
+            if (!txn.splits.isNullOrEmpty()) {
+                for (split in txn.splits) {
+                    addSplit(parentTxn, split)
+                }
+            } else if (txn.categoryId != null) {
+                val category =
+                    findAccountByUuid(txn.categoryId)
+                        ?: throw IllegalArgumentException("Category not found: ${txn.categoryId}")
+                val splitTxn =
+                    SplitTxn.makeSplitTxn(
+                        parentTxn,
+                        txn.amount,
+                        1.0,
+                        category,
+                        txn.memo ?: "",
+                        -1L,
+                        fromStatus(txn.status),
+                    )
+                parentTxn.addSplit(splitTxn)
+            }
         }
 
         book.transactionSet.addNewTxn(parentTxn)

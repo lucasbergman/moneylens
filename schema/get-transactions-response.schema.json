@@ -33,6 +33,15 @@
                     "type": "string",
                     "description": "Contra-account UUID (simple txn)"
                 },
+                "shares": {
+                    "type": "integer",
+                    "description": "Number of shares (multiplied by the security's precision, e.g., 1000 for 3 decimal places)"
+                },
+                "price": {
+                    "type": "number",
+                    "description": "Price per share (Moneydance stores this as the reciprocal: shares per currency unit)"
+                },
+                "invest_action": { "$ref": "#/$defs/invest_action" },
                 "splits": { "type": "array", "items": { "$ref": "#/$defs/split" } }
             },
             "required": ["date", "description", "account_id", "amount"]
@@ -40,6 +49,23 @@
         "status": {
             "type": "string",
             "enum": ["cleared", "reconciling", "unreconciled"]
+        },
+        "invest_action": {
+            "type": "string",
+            "enum": [
+                "BUY",
+                "SELL",
+                "BUY_XFER",
+                "SELL_XFER",
+                "BANK",
+                "DIVIDEND",
+                "SHORT",
+                "COVER",
+                "DIVIDENDXFR",
+                "MISCINC",
+                "MISCEXP",
+                "DIVIDEND_REINVEST"
+            ]
         },
         "split": {
             "type": "object",

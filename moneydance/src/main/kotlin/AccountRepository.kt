@@ -12,6 +12,7 @@ data class AccountModel(
     val fullName: String,
     val type: String,
     val currencyCode: String,
+    val decimalPlaces: Int,
     val parentId: String?,
     val inactive: Boolean,
 )
@@ -40,6 +41,9 @@ data class TransactionModel(
     val attachments: List<String>?,
     val categoryId: String?,
     val splits: List<SplitModel>?,
+    val shares: Long? = null,
+    val price: Double? = null,
+    val investAction: String? = null,
 )
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)

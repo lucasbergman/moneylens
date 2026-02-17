@@ -4,6 +4,8 @@ import com.infinitekind.moneydance.model.AbstractTxn
 import com.infinitekind.moneydance.model.Account
 import com.infinitekind.moneydance.model.Account.AccountType
 import com.infinitekind.moneydance.model.AccountBook
+import com.infinitekind.moneydance.model.InvestFields
+import com.infinitekind.moneydance.model.InvestTxnType
 import com.infinitekind.moneydance.model.ParentTxn
 import com.infinitekind.moneydance.model.SplitTxn
 
@@ -68,6 +70,7 @@ class MoneydanceAccountRepository(
                     fullName = account.fullAccountName,
                     type = accountTypeString(account.accountType),
                     currencyCode = account.currencyType.idString,
+                    decimalPlaces = account.currencyType.decimalPlaces,
                     parentId =
                         if (account.parentAccount != null && account.parentAccount.accountType != AccountType.ROOT) {
                             account.parentAccount.uuid
@@ -140,36 +143,85 @@ class MoneydanceAccountRepository(
                     txnModel.status?.let { parseStatus(it) } ?: AbstractTxn.STATUS_UNRECONCILED,
                 )
 
-            if (!txnModel.splits.isNullOrEmpty()) {
-                for (splitModel in txnModel.splits) {
+            if (txnModel.investAction != null && account.accountType == AccountType.INVESTMENT) {
+                val investFields = InvestFields()
+                val action =
+                    try {
+                        InvestTxnType.valueOf(txnModel.investAction.uppercase())
+                    } catch (_: Exception) {
+                        InvestTxnType.BANK
+                    }
+                // setFieldStatus configures the InvestFields flags (hasSecurity, hasXfrAcct, etc)
+                // for the given action, but also populates defaults (like "Bills") that we
+                // want to override with our own candidates.
+                investFields.setFieldStatus(action, pTxn)
+                investFields.security = null
+                investFields.xfrAcct = null
+                investFields.category = null
+                investFields.feeAcct = null
+
+                investFields.date = dateInt
+                investFields.taxDate = taxDateInt
+                investFields.shares = txnModel.shares ?: 0L
+                // Moneydance stores price as the reciprocal: shares per currency unit.
+                investFields.price = txnModel.price ?: 0.0
+                investFields.amount = txnModel.amount
+                investFields.memo = txnModel.memo ?: ""
+
+                // Map candidate accounts (from splits and category_id) to the appropriate investment fields.
+                val candidateAccounts =
+                    (txnModel.splits?.mapNotNull { findAccountByUuid(book.rootAccount, it.categoryId) } ?: emptyList()) +
+                        listOfNotNull(txnModel.categoryId?.let { findAccountByUuid(book.rootAccount, it) })
+
+                for (acct in candidateAccounts) {
+                    when {
+                        investFields.hasSecurity && investFields.security == null && acct.accountType == AccountType.SECURITY ->
+                            investFields.security = acct
+                        investFields.hasXfrAcct && investFields.xfrAcct == null ->
+                            investFields.xfrAcct = acct
+                        investFields.hasCategory && investFields.category == null ->
+                            investFields.category = acct
+                    }
+                }
+
+                // Fallback for BANK transactions to ensure the transfer account is set.
+                if (action == InvestTxnType.BANK && investFields.xfrAcct == null) {
+                    investFields.xfrAcct = candidateAccounts.firstOrNull()
+                }
+
+                investFields.storeFields(pTxn)
+            } else {
+                if (!txnModel.splits.isNullOrEmpty()) {
+                    for (splitModel in txnModel.splits) {
+                        val category =
+                            findAccountByUuid(book.rootAccount, splitModel.categoryId) ?: continue
+                        val sTxn =
+                            SplitTxn.makeSplitTxn(
+                                pTxn,
+                                splitModel.amount,
+                                1.0,
+                                category,
+                                splitModel.memo ?: "",
+                                -1L,
+                                AbstractTxn.STATUS_UNRECONCILED,
+                            )
+                        pTxn.addSplit(sTxn)
+                    }
+                } else if (txnModel.categoryId != null) {
                     val category =
-                        findAccountByUuid(book.rootAccount, splitModel.categoryId) ?: continue
+                        findAccountByUuid(book.rootAccount, txnModel.categoryId) ?: continue
                     val sTxn =
                         SplitTxn.makeSplitTxn(
                             pTxn,
-                            splitModel.amount,
+                            txnModel.amount,
                             1.0,
                             category,
-                            splitModel.memo ?: "",
+                            txnModel.memo ?: "",
                             -1L,
-                            AbstractTxn.STATUS_UNRECONCILED,
+                            txnModel.status?.let { parseStatus(it) } ?: AbstractTxn.STATUS_UNRECONCILED,
                         )
                     pTxn.addSplit(sTxn)
                 }
-            } else if (txnModel.categoryId != null) {
-                val category =
-                    findAccountByUuid(book.rootAccount, txnModel.categoryId) ?: continue
-                val sTxn =
-                    SplitTxn.makeSplitTxn(
-                        pTxn,
-                        txnModel.amount,
-                        1.0,
-                        category,
-                        txnModel.memo ?: "",
-                        -1L,
-                        txnModel.status?.let { parseStatus(it) } ?: AbstractTxn.STATUS_UNRECONCILED,
-                    )
-                pTxn.addSplit(sTxn)
             }
 
             book.transactionSet.addNewTxn(pTxn)
@@ -205,6 +257,20 @@ class MoneydanceAccountRepository(
         val splits =
             (0 until txn.splitCount).map { i -> toSplitModel(txn.getSplit(i)) }
 
+        var shares: Long? = null
+        var price: Double? = null
+        var investAction: String? = null
+
+        if (txn.account.accountType == AccountType.INVESTMENT) {
+            val investFields = InvestFields()
+            investFields.setFieldStatus(txn)
+            if (investFields.txnType != null) {
+                shares = investFields.shares
+                price = investFields.price
+                investAction = investFields.txnType.name
+            }
+        }
+
         return TransactionModel(
             date = formatDate(txn.dateInt),
             taxDate = taxDate,
@@ -218,6 +284,9 @@ class MoneydanceAccountRepository(
             attachments = null,
             categoryId = null,
             splits = splits.ifEmpty { null },
+            shares = shares,
+            price = price,
+            investAction = investAction,
         )
     }
 

@@ -24,9 +24,24 @@
                     "type": "string",
                     "description": "ISO 4217 code or ticker"
                 },
-                "parent_id": { "type": "string", "description": "Parent category UUID" }
+                "decimal_places": {
+                    "type": "integer",
+                    "description": "Number of decimal places for this account's currency or security"
+                },
+                "parent_id": {
+                    "type": "string",
+                    "description": "Parent category UUID"
+                },
+                "inactive": { "type": "boolean" }
             },
-            "required": ["id", "name", "full_name", "type", "currency_code"]
+            "required": [
+                "id",
+                "name",
+                "full_name",
+                "type",
+                "currency_code",
+                "decimal_places"
+            ]
         },
         "category_type": {
             "type": "string",
