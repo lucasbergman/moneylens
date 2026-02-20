@@ -260,6 +260,7 @@ class MoneydanceAccountRepository(
         var shares: Long? = null
         var price: Double? = null
         var investAction: String? = null
+        var amount = txn.value
 
         if (txn.account.accountType == AccountType.INVESTMENT) {
             val investFields = InvestFields()
@@ -268,6 +269,7 @@ class MoneydanceAccountRepository(
                 shares = investFields.shares
                 price = investFields.price
                 investAction = investFields.txnType.name
+                amount = investFields.amount
             }
         }
 
@@ -276,7 +278,7 @@ class MoneydanceAccountRepository(
             taxDate = taxDate,
             description = txn.description,
             accountId = txn.account.uuid,
-            amount = txn.value,
+            amount = amount,
             status = toStatus(txn.status),
             memo = txn.memo?.ifEmpty { null },
             checkNumber = txn.checkNumber?.ifEmpty { null },
