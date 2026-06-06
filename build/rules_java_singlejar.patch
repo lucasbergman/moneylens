@@ -1,16 +1,14 @@
-diff --git a/java/java_single_jar.bzl b/java/java_single_jar.bzl
-index bfdd21c..768da37 100644
---- a/java/java_single_jar.bzl
-+++ b/java/java_single_jar.bzl
-@@ -2,6 +2,7 @@
+--- a/java/common/rules/java_single_jar.bzl
++++ b/java/common/rules/java_single_jar.bzl
+@@ -15,6 +15,7 @@
  
  load("//java/common:java_common.bzl", "java_common")
  load("//java/common:java_info.bzl", "JavaInfo")
 +load("//java/common:java_semantics.bzl", "semantics")
  
- def _single_jar_inputs(deps, deploy_env):
-     transitive_inputs = []
-@@ -62,13 +63,14 @@ def _java_single_jar(ctx):
+ # copybara: default visibility
+ 
+@@ -77,13 +78,14 @@
      if ctx.attr.exclude_pattern:
          args.add("--exclude_pattern", ctx.attr.exclude_pattern)
  
@@ -26,7 +24,7 @@ index bfdd21c..768da37 100644
          use_default_shell_env = True,
      )
  
-@@ -121,16 +123,11 @@ java_single_jar = rule(
+@@ -131,15 +133,10 @@
          "exclude_pattern": attr.string(default = "", doc = """
              A regex pattern of files to exclude from the jar.
          """),
@@ -38,8 +36,7 @@ index bfdd21c..768da37 100644
 -        ),
          "output": attr.output(),
      },
-     initializer = _init,
-     implementation = _java_single_jar,
+     implementation = _bazel_java_single_jar_impl,
 +    toolchains = [semantics.JAVA_TOOLCHAIN],
      doc = """
  Collects Java dependencies and jar files into a single jar

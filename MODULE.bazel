@@ -1,10 +1,10 @@
 module(name = "moneylens")
 
-bazel_dep(name = "platforms", version = "1.0.0")  # undeclared dep of rules_nixpkgs_cc
-bazel_dep(name = "rules_cc", version = "0.2.16")
-bazel_dep(name = "rules_java", version = "9.3.0")
-bazel_dep(name = "rules_jvm_external", version = "6.9")
-bazel_dep(name = "rules_kotlin", version = "2.2.2")
+bazel_dep(name = "platforms", version = "1.1.0")  # undeclared dep of rules_nixpkgs_cc
+bazel_dep(name = "rules_cc", version = "0.2.19")
+bazel_dep(name = "rules_java", version = "9.6.1")
+bazel_dep(name = "rules_jvm_external", version = "7.0")
+bazel_dep(name = "rules_kotlin", version = "2.3.20")
 bazel_dep(name = "rules_nixpkgs_core", version = "0.13.0")
 bazel_dep(name = "rules_nixpkgs_cc", version = "0.13.0")
 bazel_dep(name = "rules_nixpkgs_java", version = "0.13.0")
@@ -25,14 +25,14 @@ _RULES_NIXPKGS_HASH = "sha256-xQQb/x9h1OfDrinsa5N09e7KUv8opAoUbVxGKtQtv4E="
 # hanging off it, so the patch just uses that.
 archive_override(
     module_name = "rules_java",
-    integrity = "sha256-bvJtT5eOi0z1zh1HUy1wy2LNGEMSJ6HIAHyPeEMkPAY=",
+    integrity = "sha256-neTheMLE+Y0yqv5RlMPytxeuEEBcqhG9y0YKwqb2FRY=",
     patch_args = ["-p1"],
     patches = [
         "//build:rules_java_ijar.patch",
         "//build:rules_java_singlejar.patch",
     ],
     strip_prefix = "",
-    urls = ["https://github.com/bazelbuild/rules_java/releases/download/9.3.0/rules_java-9.3.0.tar.gz"],
+    urls = ["https://github.com/bazelbuild/rules_java/releases/download/9.6.1/rules_java-9.6.1.tar.gz"],
 )
 
 # It would be nice if rules_nixpkgs cut new versions sometimes
@@ -88,8 +88,8 @@ maven.install(
         "com.fasterxml.jackson.core:jackson-databind:2.17.0",
         "com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0",
         "jakarta.servlet:jakarta.servlet-api:6.1.0",
-        "org.eclipse.jetty:jetty-server:12.1.5",
-        "org.eclipse.jetty.ee10:jetty-ee10-servlet:12.1.5",
+        "org.eclipse.jetty:jetty-server:12.1.10",
+        "org.eclipse.jetty.ee10:jetty-ee10-servlet:12.1.10",
     ],
     fetch_sources = True,
     known_contributing_modules = [
@@ -105,7 +105,7 @@ maven.artifact(
         "com.fasterxml.jackson.core:jackson-databind",
     ],
     group = "io.modelcontextprotocol.sdk",
-    version = "0.17.2",
+    version = "0.18.2",
 )
 use_repo(maven, "maven")
 
