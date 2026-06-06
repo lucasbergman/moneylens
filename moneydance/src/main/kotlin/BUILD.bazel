@@ -24,6 +24,7 @@ kt_jvm_library(
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_module_jackson_module_kotlin",
         "@maven//:io_modelcontextprotocol_sdk_mcp",
+        "@maven//:jakarta_servlet_jakarta_servlet_api",
         "@maven//:org_eclipse_jetty_ee10_jetty_ee10_servlet",
         "@maven//:org_eclipse_jetty_jetty_server",
         "@moneydance_devkit//:lib",

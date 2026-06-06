@@ -13,10 +13,15 @@ import io.modelcontextprotocol.json.schema.jackson.DefaultJsonSchemaValidator
 import io.modelcontextprotocol.server.McpSyncServer
 import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider
 import io.modelcontextprotocol.spec.McpSchema
+import jakarta.servlet.http.HttpServlet
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponseWrapper
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler
 import org.eclipse.jetty.ee10.servlet.ServletHolder
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
+import java.io.PrintWriter
 import kotlin.time.Duration.Companion.seconds
 import io.modelcontextprotocol.server.McpServer as McpServerFactory
 
@@ -64,6 +69,7 @@ class McpServer(
                     createTransactionsTool,
                 ).build()
 
+        val flushingServlet = PreambleFlushingMcpServlet(transportProvider)
         jettyServer =
             Server().apply {
                 stopTimeout = 3.seconds.inWholeMilliseconds
@@ -75,7 +81,12 @@ class McpServer(
                 )
                 handler =
                     ServletContextHandler().apply {
-                        addServlet(ServletHolder(transportProvider), "/*")
+                        addServlet(
+                            ServletHolder(flushingServlet).apply {
+                                isAsyncSupported = true
+                            },
+                            "/*",
+                        )
                     }
                 start()
             }
@@ -90,5 +101,39 @@ class McpServer(
         jettyServer?.destroy()
         mcpSyncServer = null
         jettyServer = null
+    }
+}
+
+class PreambleFlushingMcpServlet(
+    private val delegate: HttpServlet,
+) : HttpServlet() {
+    override fun init(config: jakarta.servlet.ServletConfig) {
+        super.init(config)
+        delegate.init(config)
+    }
+
+    override fun service(
+        req: HttpServletRequest,
+        res: HttpServletResponse,
+    ) {
+        val method = req.method
+        val wrappedRes =
+            object : HttpServletResponseWrapper(res) {
+                private var writer: PrintWriter? = null
+
+                override fun getWriter(): PrintWriter {
+                    writer?.let { return it }
+
+                    val originalWriter = super.getWriter()
+                    // Write SSE preamble for GET request to flush headers
+                    if (method == "GET" && (res.contentType ?: "").contains("text/event-stream")) {
+                        originalWriter.write(":\n\n")
+                        originalWriter.flush()
+                    }
+                    writer = originalWriter
+                    return originalWriter
+                }
+            }
+        delegate.service(req, wrappedRes)
     }
 }

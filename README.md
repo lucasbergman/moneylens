@@ -7,7 +7,7 @@ your personal finance ledger.
 ## What it does
 
 Money Lens runs as a Moneydance extension, exposing your financial data via MCP. This
-enables AI assistants like Claude or Gemini to:
+enables AI assistants to:
 
 - **List accounts and categories** — search by name, type, or UUID
 - **Query transactions** — filter by account, date range, and description
@@ -29,7 +29,7 @@ The server runs on `http://127.0.0.1:51234/mcp` by default.
 
 - [Moneydance](https://moneydance.com/), recent (2024+) build
 - An MCP-compatible client (e.g., [Claude Code](https://claude.ai/claude-code), Claude
-  Desktop, [Gemini CLI](https://geminicli.com/))
+  Desktop, [Google Antigravity](https://antigravity.google/))
 
 ## Installation
 
@@ -41,16 +41,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions.
 
 ## Usage
 
-### With Claude Code
-
 Add to your MCP settings:
 
 ```json
 {
     "mcpServers": {
         "moneylens": {
-            "type": "http",
-            "url": "http://127.0.0.1:51234/mcp"
+            "serverUrl": "http://127.0.0.1:51234/mcp"
         }
     }
 }
@@ -70,12 +67,12 @@ Money Lens handles complex transactions like paychecks with multiple splits:
 ```
 User: Enter my paycheck from the attached paystub PDF
 
-Claude: [Reads PDF, looks up category UUIDs, creates transaction with splits
-        for gross pay, taxes, benefits, 401k, HSA, etc.]
+AI assistant: [Reads PDF, looks up category UUIDs, creates transaction with splits
+               for gross pay, taxes, benefits, 401k, HSA, etc.]
 ```
 
-You can create a custom slash command (e.g., `.claude/commands/paycheck.md`) with your
-employer-specific category mappings for a repeatable workflow.
+You can create custom skills with your employer-specific category mappings for a
+repeatable workflow.
 
 ## License
 
