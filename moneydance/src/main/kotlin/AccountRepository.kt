@@ -67,3 +67,11 @@ interface AccountRepository {
 
     fun createTransactions(transactions: List<TransactionModel>)
 }
+
+internal fun String.toMoneydanceDateInt(): Int = replace("-", "").toInt()
+
+internal fun Int.toIsoDateString(): String {
+    val s = toString()
+    if (s.length != 8) return s
+    return "${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)}"
+}

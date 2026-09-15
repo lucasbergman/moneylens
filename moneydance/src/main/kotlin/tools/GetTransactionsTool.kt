@@ -2,6 +2,7 @@ package com.moneydance.modules.features.moneylens.tools
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.moneydance.modules.features.moneylens.AccountRepository
+import com.moneydance.modules.features.moneylens.toMoneydanceDateInt
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
 import java.time.LocalDate
@@ -37,13 +38,13 @@ class GetTransactionsTool(
                 val description = args["description"] as? String
 
                 val afterDateInt =
-                    (
-                        minDate?.replace("-", "") ?: LocalDate
+                    minDate?.toMoneydanceDateInt()
+                        ?: LocalDate
                             .now()
                             .minusDays(30)
                             .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-                    ).toInt()
-                val beforeDateInt = maxDate?.replace("-", "")?.toInt()
+                            .toInt()
+                val beforeDateInt = maxDate?.toMoneydanceDateInt()
 
                 val transactions =
                     accountRepository.getTransactions(accountId, afterDateInt, beforeDateInt, description)
