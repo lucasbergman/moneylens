@@ -4,10 +4,7 @@ kt_jvm_library(
     name = "moneylens_lib",
     srcs = [
         "AccountRepository.kt",
-        "Exporter.kt",
-        "Importer.kt",
         "Main.kt",
-        "MainDialog.kt",
         "McpServer.kt",
         "MoneydanceAccountRepository.kt",
         "tools/AccountListToolSpec.kt",

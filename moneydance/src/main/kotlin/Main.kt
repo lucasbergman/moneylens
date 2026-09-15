@@ -1,16 +1,13 @@
 package com.moneydance.modules.features.moneylens
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.moneydance.apps.md.controller.FeatureModule
 import java.io.File
-import java.time.Period
 import javax.swing.JOptionPane
 
 private const val URI = "moneylens:hello"
 
 /**
- * A "Hello, World" sample Moneydance extension written in Kotlin.
+ * Money Lens extension entry point.
  */
 @Suppress("unused")
 class Main : FeatureModule() {
@@ -47,57 +44,12 @@ class Main : FeatureModule() {
      */
     override fun invoke(uri: String) {
         if (uri != URI) return
-        MainDialog(::onExport, ::onImport).isVisible = true
-    }
-
-    private fun onExport(f: File) {
-        if (context == null) throw IllegalStateException("Null context")
-        val book = context.currentAccountBook
-        if (book == null) {
-            System.err.println("No account book open")
-            return
-        }
-
-        try {
-            val export = Exporter(book).export(Period.ofDays(10))
-            val mapper = ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT)
-            mapper.writeValue(f, export)
-        } catch (e: Exception) {
-            System.err.println("Exception on export: ${e.message}")
-            e.printStackTrace(System.err)
-        }
-        JOptionPane.showMessageDialog(null, "Export successful!")
-    }
-
-    private fun onImport(f: File) {
-        if (context == null) throw IllegalStateException("Null context")
-        val book = context.currentAccountBook
-        if (book == null) {
-            System.err.println("No account book open")
-            return
-        }
-
-        try {
-            val result = Importer(book).import(f)
-            val message =
-                buildString {
-                    append("Imported ${result.importedCount} transaction(s).")
-                    if (result.errors.isNotEmpty()) {
-                        append("\n\nErrors:\n")
-                        result.errors.forEach { append("• $it\n") }
-                    }
-                }
-            JOptionPane.showMessageDialog(null, message)
-        } catch (e: Exception) {
-            System.err.println("Exception on import: ${e.message}")
-            e.printStackTrace(System.err)
-            JOptionPane.showMessageDialog(
-                null,
-                "Import failed: ${e.message}",
-                "Import Error",
-                JOptionPane.ERROR_MESSAGE,
-            )
-        }
+        JOptionPane.showMessageDialog(
+            null,
+            "Money Lens MCP server is running on http://127.0.0.1:51234/mcp",
+            "Money Lens",
+            JOptionPane.INFORMATION_MESSAGE,
+        )
     }
 
     /**

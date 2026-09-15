@@ -46,13 +46,6 @@ data class TransactionModel(
     val investAction: String? = null,
 )
 
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-data class ExportModel(
-    val accounts: List<AccountModel>,
-    val transactions: List<TransactionModel>,
-)
-
 data class AccountFilter(
     val types: Set<String>? = null,
     val name: String? = null,
