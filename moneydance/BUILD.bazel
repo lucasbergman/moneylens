@@ -7,16 +7,18 @@ java_binary(
     runtime_deps = ["@moneydance_devkit//:lib"],
 )
 
-# This target that represents the environment that the :moneylens plugin gets
-# deployed into, like Moneydance's internals that we compile against. (As I'm
-# writing this in Jan 2026, Moneydance 2024.4_5253 also includes the Kotlin
-# standard library 1.9.21.) This gets excluded from the plugin bundle in the
-# :moneylens target.
+# This target represents the environment that the :moneylens plugin gets
+# deployed into, like Moneydance's internals that we compile against.
+# This gets excluded from the plugin bundle in the :moneylens target.
 java_single_jar(
     name = "moneydance_runtime",
     deps = [
         "@moneydance_devkit//:lib",
+        # Moneydance 5253 ships with Kotlin stdlib & reflect 1.9.21
+        "@maven//:org_jetbrains_kotlin_kotlin_reflect",
         "@rules_kotlin//kotlin/compiler:kotlin-stdlib",
+        # Moneydance 5253 ships with jackson-core 2.17.0
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
     ],
 )
 
