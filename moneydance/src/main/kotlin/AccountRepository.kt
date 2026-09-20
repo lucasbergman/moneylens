@@ -1,6 +1,7 @@
 package com.moneydance.modules.features.moneylens
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 
@@ -44,6 +45,10 @@ data class TransactionModel(
     val shares: Long? = null,
     val price: Double? = null,
     val investAction: String? = null,
+    @JsonProperty("is_unconfirmed")
+    val isUnconfirmed: Boolean? = null,
+    val downloaded: Boolean? = null,
+    val fiTxnId: String? = null,
 )
 
 data class AccountFilter(
@@ -63,6 +68,7 @@ interface AccountRepository {
         afterDateInt: Int,
         beforeDateInt: Int? = null,
         description: String? = null,
+        isUnconfirmed: Boolean? = null,
     ): List<TransactionModel>
 
     fun createTransactions(transactions: List<TransactionModel>)

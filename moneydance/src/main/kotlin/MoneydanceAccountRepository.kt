@@ -104,6 +104,7 @@ class MoneydanceAccountRepository(
         afterDateInt: Int,
         beforeDateInt: Int?,
         description: String?,
+        isUnconfirmed: Boolean?,
     ): List<TransactionModel> {
         val book = accountBookSupplier() ?: return emptyList()
         val account = findAccountByUuid(book.rootAccount, accountId) ?: return emptyList()
@@ -115,6 +116,15 @@ class MoneydanceAccountRepository(
             .let { txns ->
                 if (description != null) {
                     txns.filter { it.description.contains(description, ignoreCase = true) }
+                } else {
+                    txns
+                }
+            }.let { txns ->
+                if (isUnconfirmed != null) {
+                    txns.filter { txn ->
+                        val unconfirmed = txn.isNew || (0 until txn.splitCount).any { txn.getSplit(it).isNew }
+                        unconfirmed == isUnconfirmed
+                    }
                 } else {
                     txns
                 }
@@ -281,6 +291,16 @@ class MoneydanceAccountRepository(
             }
         }
 
+        val isUnconfirmed = txn.isNew || (0 until txn.splitCount).any { txn.getSplit(it).isNew }
+        val downloaded = txn.wasDownloaded() || (0 until txn.splitCount).any { txn.getSplit(it).wasDownloaded() }
+        val fiTxnId =
+            txn.getFiTxnId(0)?.ifBlank { null }
+                ?: txn.getFiTxnId(1)?.ifBlank { null }
+                ?: (0 until txn.splitCount).firstNotNullOfOrNull { i ->
+                    val split = txn.getSplit(i)
+                    split.getFiTxnId(0)?.ifBlank { null } ?: split.getFiTxnId(1)?.ifBlank { null }
+                }
+
         return TransactionModel(
             date = txn.dateInt.toIsoDateString(),
             taxDate = taxDate,
@@ -297,6 +317,9 @@ class MoneydanceAccountRepository(
             shares = shares,
             price = price,
             investAction = investAction,
+            isUnconfirmed = isUnconfirmed,
+            downloaded = downloaded,
+            fiTxnId = fiTxnId,
         )
     }
 

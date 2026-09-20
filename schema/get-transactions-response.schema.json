@@ -42,7 +42,19 @@
                     "description": "Price per share (Moneydance stores this as the reciprocal: shares per currency unit)"
                 },
                 "invest_action": { "$ref": "#/$defs/invest_action" },
-                "splits": { "type": "array", "items": { "$ref": "#/$defs/split" } }
+                "splits": { "type": "array", "items": { "$ref": "#/$defs/split" } },
+                "is_unconfirmed": {
+                    "type": "boolean",
+                    "description": "Whether this transaction was downloaded and is awaiting confirmation"
+                },
+                "downloaded": {
+                    "type": "boolean",
+                    "description": "Whether this transaction was downloaded from a financial institution"
+                },
+                "fi_txn_id": {
+                    "type": "string",
+                    "description": "Financial institution transaction ID (e.g., FITID from OFX/online banking)"
+                }
             },
             "required": ["date", "description", "account_id", "amount"]
         },

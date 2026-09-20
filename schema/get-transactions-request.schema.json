@@ -22,6 +22,10 @@
         "description": {
             "type": "string",
             "description": "Case-insensitive substring match on transaction description"
+        },
+        "is_unconfirmed": {
+            "type": "boolean",
+            "description": "If specified, filter transactions by unconfirmed status (true for unconfirmed only, false for confirmed only)"
         }
     },
     "required": ["account_id"]

@@ -36,6 +36,7 @@ class GetTransactionsTool(
                 val minDate = args["min_date"] as? String
                 val maxDate = args["max_date"] as? String
                 val description = args["description"] as? String
+                val isUnconfirmed = args["is_unconfirmed"] as? Boolean
 
                 val afterDateInt =
                     minDate?.toMoneydanceDateInt()
@@ -47,7 +48,13 @@ class GetTransactionsTool(
                 val beforeDateInt = maxDate?.toMoneydanceDateInt()
 
                 val transactions =
-                    accountRepository.getTransactions(accountId, afterDateInt, beforeDateInt, description)
+                    accountRepository.getTransactions(
+                        accountId = accountId,
+                        afterDateInt = afterDateInt,
+                        beforeDateInt = beforeDateInt,
+                        description = description,
+                        isUnconfirmed = isUnconfirmed,
+                    )
 
                 McpSchema.CallToolResult
                     .builder()
