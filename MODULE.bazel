@@ -1,6 +1,6 @@
 module(name = "moneylens")
 
-bazel_dep(name = "platforms", version = "1.1.0")  # undeclared dep of rules_nixpkgs_cc
+bazel_dep(name = "platforms", version = "1.1.0")  # undeclared dep of rules_nixpkgs_cc (fixed in PR #772)
 bazel_dep(name = "rules_cc", version = "0.2.19")
 bazel_dep(name = "rules_java", version = "9.6.1")
 bazel_dep(name = "rules_jvm_external", version = "7.0")
@@ -35,10 +35,13 @@ archive_override(
     urls = ["https://github.com/bazelbuild/rules_java/releases/download/9.6.1/rules_java-9.6.1.tar.gz"],
 )
 
-# It would be nice if rules_nixpkgs cut new versions sometimes
+# Bazel 9 needs a patched rules_nixpkgs. These patches and archive overrides can be
+# removed once https://github.com/tweag/rules_nixpkgs/pull/772 lands.
 archive_override(
     module_name = "rules_nixpkgs_core",
     integrity = _RULES_NIXPKGS_HASH,
+    patch_args = ["-p1"],
+    patches = ["//build:rules_nixpkgs_core.patch"],
     strip_prefix = "rules_nixpkgs-%s/core" % _RULES_NIXPKGS_COMMIT,
     urls = ["https://github.com/tweag/rules_nixpkgs/archive/%s.tar.gz" % _RULES_NIXPKGS_COMMIT],
 )
@@ -53,6 +56,8 @@ archive_override(
 archive_override(
     module_name = "rules_nixpkgs_java",
     integrity = _RULES_NIXPKGS_HASH,
+    patch_args = ["-p1"],
+    patches = ["//build:rules_nixpkgs_java.patch"],
     strip_prefix = "rules_nixpkgs-%s/toolchains/java" % _RULES_NIXPKGS_COMMIT,
     urls = ["https://github.com/tweag/rules_nixpkgs/archive/%s.tar.gz" % _RULES_NIXPKGS_COMMIT],
 )
