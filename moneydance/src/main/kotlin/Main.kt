@@ -74,10 +74,12 @@ class Main : FeatureModule() {
                 val appData = System.getenv("APPDATA") ?: "$userHome\\AppData\\Roaming"
                 File(appData, "MoneyLens")
             }
+
             osName.startsWith("mac", ignoreCase = true) -> {
                 // macOS: ~/Library/Application Support/MoneyLens
                 File(userHome, "Library/Application Support/MoneyLens")
             }
+
             else -> {
                 // Unix: ~/.config/moneylens
                 val configHome = System.getenv("XDG_CONFIG_HOME") ?: "$userHome/.config"

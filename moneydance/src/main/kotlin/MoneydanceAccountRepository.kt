@@ -186,12 +186,17 @@ class MoneydanceAccountRepository(
 
                 for (acct in candidateAccounts) {
                     when {
-                        investFields.hasSecurity && investFields.security == null && acct.accountType == AccountType.SECURITY ->
+                        investFields.hasSecurity && investFields.security == null && acct.accountType == AccountType.SECURITY -> {
                             investFields.security = acct
-                        investFields.hasXfrAcct && investFields.xfrAcct == null ->
+                        }
+
+                        investFields.hasXfrAcct && investFields.xfrAcct == null -> {
                             investFields.xfrAcct = acct
-                        investFields.hasCategory && investFields.category == null ->
+                        }
+
+                        investFields.hasCategory && investFields.category == null -> {
                             investFields.category = acct
+                        }
                     }
                 }
 
