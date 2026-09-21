@@ -8,8 +8,8 @@ import com.moneydance.modules.features.moneylens.tools.GetTransactionsTool
 import com.moneydance.modules.features.moneylens.tools.HelloTool
 import com.moneydance.modules.features.moneylens.tools.ListAccountsTool
 import com.moneydance.modules.features.moneylens.tools.ListCategoriesTool
-import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper
-import io.modelcontextprotocol.json.schema.jackson.DefaultJsonSchemaValidator
+import io.modelcontextprotocol.json.jackson2.JacksonMcpJsonMapper
+import io.modelcontextprotocol.json.schema.jackson2.DefaultJsonSchemaValidator
 import io.modelcontextprotocol.server.McpSyncServer
 import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider
 import io.modelcontextprotocol.spec.McpSchema

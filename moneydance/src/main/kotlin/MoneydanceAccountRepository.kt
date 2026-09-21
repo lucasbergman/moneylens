@@ -209,7 +209,8 @@ class MoneydanceAccountRepository(
                         val sTxn =
                             SplitTxn.makeSplitTxn(
                                 pTxn,
-                                splitModel.amount,
+                                -splitModel.amount,
+                                -splitModel.amount,
                                 1.0,
                                 category,
                                 splitModel.memo ?: "",
@@ -224,7 +225,8 @@ class MoneydanceAccountRepository(
                     val sTxn =
                         SplitTxn.makeSplitTxn(
                             pTxn,
-                            txnModel.amount,
+                            -txnModel.amount,
+                            -txnModel.amount,
                             1.0,
                             category,
                             txnModel.memo ?: "",
