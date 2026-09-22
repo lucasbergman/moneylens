@@ -1,20 +1,12 @@
 --- a/java/common/rules/java_single_jar.bzl
 +++ b/java/common/rules/java_single_jar.bzl
-@@ -15,6 +15,7 @@
- 
- load("//java/common:java_common.bzl", "java_common")
- load("//java/common:java_info.bzl", "JavaInfo")
-+load("//java/common:java_semantics.bzl", "semantics")
- 
- # copybara: default visibility
- 
-@@ -77,13 +78,14 @@
+@@ -86,13 +86,14 @@
      if ctx.attr.exclude_pattern:
          args.add("--exclude_pattern", ctx.attr.exclude_pattern)
  
 +    toolchain = semantics.find_java_toolchain(ctx)
      ctx.actions.run(
-         inputs = inputs,
+         inputs = depset(build_info_files, transitive = [inputs]),
          outputs = [ctx.outputs.output],
          arguments = [args],
          progress_message = "Merging into %s" % ctx.outputs.output.short_path,
@@ -24,7 +16,7 @@
          use_default_shell_env = True,
      )
  
-@@ -131,15 +133,10 @@
+@@ -140,12 +141,6 @@
          "exclude_pattern": attr.string(default = "", doc = """
              A regex pattern of files to exclude from the jar.
          """),
@@ -35,6 +27,10 @@
 -            executable = True,
 -        ),
          "output": attr.output(),
+         "stamp": attr.int(
+             doc = """
+@@ -163,6 +158,7 @@
+         "_build_info_translator": attr.label(default = semantics.BUILD_INFO_TRANSLATOR_LABEL),
      },
      implementation = _bazel_java_single_jar_impl,
 +    toolchains = [semantics.JAVA_TOOLCHAIN],
