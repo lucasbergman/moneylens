@@ -1,17 +1,13 @@
 module(name = "moneylens")
 
-bazel_dep(name = "platforms", version = "1.1.0")  # undeclared dep of rules_nixpkgs_cc (fixed in PR #772)
+bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "rules_cc", version = "0.2.25")
 bazel_dep(name = "rules_java", version = "9.9.0")
 bazel_dep(name = "rules_jvm_external", version = "7.1")
 bazel_dep(name = "rules_kotlin", version = "2.4.20")
-bazel_dep(name = "rules_nixpkgs_core", version = "0.14.0")
-bazel_dep(name = "rules_nixpkgs_cc", version = "0.14.0")
-bazel_dep(name = "rules_nixpkgs_java", version = "0.14.0")
-
-_RULES_NIXPKGS_COMMIT = "c00ae99776805215f2642f76d00dbeebaba2b934"
-
-_RULES_NIXPKGS_HASH = "sha256-fkq1H+DG9k/j1hPAGS+HoXwgY3NwNO9/8ycpdfBpgzk="
+bazel_dep(name = "rules_nixpkgs_core", version = "0.14.1")
+bazel_dep(name = "rules_nixpkgs_cc", version = "0.14.1")
+bazel_dep(name = "rules_nixpkgs_java", version = "0.14.1")
 
 # The patches fix rules_java to build ijar and singlejar from source (for NixOS)
 #
@@ -36,21 +32,23 @@ archive_override(
 )
 
 # Bazel 9 needs a patched rules_nixpkgs. These patches and archive overrides can be
-# removed once https://github.com/tweag/rules_nixpkgs/pull/772 lands.
+# removed once https://github.com/tweag/rules_nixpkgs/pull/779 lands.
+_RULES_NIXPKGS_VERSION = "0.14.1"
+
+_RULES_NIXPKGS_HASH = "sha256-VAJWiTZyBbg1GYZ35obYIItXC/2E5ocmhK5ld0dnO5c="
+
 archive_override(
     module_name = "rules_nixpkgs_core",
     integrity = _RULES_NIXPKGS_HASH,
-    patch_args = ["-p1"],
-    patches = ["//build:rules_nixpkgs_core.patch"],
-    strip_prefix = "rules_nixpkgs-%s/core" % _RULES_NIXPKGS_COMMIT,
-    urls = ["https://github.com/tweag/rules_nixpkgs/archive/%s.tar.gz" % _RULES_NIXPKGS_COMMIT],
+    strip_prefix = "rules_nixpkgs-%s/core" % _RULES_NIXPKGS_VERSION,
+    urls = ["https://github.com/tweag/rules_nixpkgs/releases/download/v%s/rules_nixpkgs-%s.tar.gz" % (_RULES_NIXPKGS_VERSION, _RULES_NIXPKGS_VERSION)],
 )
 
 archive_override(
     module_name = "rules_nixpkgs_cc",
     integrity = _RULES_NIXPKGS_HASH,
-    strip_prefix = "rules_nixpkgs-%s/toolchains/cc" % _RULES_NIXPKGS_COMMIT,
-    urls = ["https://github.com/tweag/rules_nixpkgs/archive/%s.tar.gz" % _RULES_NIXPKGS_COMMIT],
+    strip_prefix = "rules_nixpkgs-%s/toolchains/cc" % _RULES_NIXPKGS_VERSION,
+    urls = ["https://github.com/tweag/rules_nixpkgs/releases/download/v%s/rules_nixpkgs-%s.tar.gz" % (_RULES_NIXPKGS_VERSION, _RULES_NIXPKGS_VERSION)],
 )
 
 archive_override(
@@ -58,8 +56,8 @@ archive_override(
     integrity = _RULES_NIXPKGS_HASH,
     patch_args = ["-p1"],
     patches = ["//build:rules_nixpkgs_java.patch"],
-    strip_prefix = "rules_nixpkgs-%s/toolchains/java" % _RULES_NIXPKGS_COMMIT,
-    urls = ["https://github.com/tweag/rules_nixpkgs/archive/%s.tar.gz" % _RULES_NIXPKGS_COMMIT],
+    strip_prefix = "rules_nixpkgs-%s/toolchains/java" % _RULES_NIXPKGS_VERSION,
+    urls = ["https://github.com/tweag/rules_nixpkgs/releases/download/v%s/rules_nixpkgs-%s.tar.gz" % (_RULES_NIXPKGS_VERSION, _RULES_NIXPKGS_VERSION)],
 )
 
 nix_repo = use_extension("@rules_nixpkgs_core//extensions:repository.bzl", "nix_repo")
