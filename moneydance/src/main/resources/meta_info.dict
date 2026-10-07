@@ -4,7 +4,7 @@
   "module_name" = "Money Lens";
   "module_desc" = "Automated transaction entry using AI";
   "id" = "moneylens";
-  "version" = "0.0";
+  "version" = "0.1";
   "package" = "com.moneydance.modules.features.moneylens";
   "minbuild" = "1372";
 }
