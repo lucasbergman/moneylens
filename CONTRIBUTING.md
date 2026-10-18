@@ -5,9 +5,13 @@
 This is early development, hackers only. Expect to do some messing around to get things
 to work.
 
-I use [NixOS](https://nixos.org/) on my computers and Nix for reproducible development
-environments. You don't have to use NixOS to use Nix tools. Install Nix (with flakes
-enabled), then:
+### Development Environment Options
+
+#### Option A: Nix (more hassle, maximum reproducibility)
+
+If you are able, you can use the [Nix package manager](https://nixos.org/); that offers
+the most reproducible build possible by pinning all compilers (Clang, OpenJDK) and
+tooling from the nixpkgs repository. Install Nix (with flakes enabled), then:
 
 ```bash
 nix develop
@@ -15,22 +19,28 @@ nix develop
 
 This drops you into a shell with all required tools (Bazel, JDK, Kotlin, etc.).
 
-I think everything should work on normie Linux and other Unix as long as
-[Bazel](https://bazel.build/) is supported. I'm less certain about macOS and Windows,
-but there's a fighting chance. Patches are very welcome.
+#### Option B: Standard Linux or macOS
+
+If you are building without Nix, install:
+
+- [Bazel](https://bazel.build/) (version 9+)
+- A C++ toolchain (e.g. GCC or Clang, needed for Bazel's native helper binaries)
+
+I've tested that the build works on Ubuntu 26.04 LTS. I think everything should work on
+normie Linux and other Unix as long as Bazel is supported. I'm less certain about macOS
+and Windows, but there's a fighting chance. Patches are very welcome.
 
 ## Building
 
-Build the Moneydance extension:
+You can build the Moneydance extension directly with Bazel:
 
 ```bash
-# Add --config=nix on NixOS
-bazel build //moneydance:moneylens_mxt
+bazel build //moneydance:moneylens_mxt  # non-Nix
+bazel build --config=nix //moneydance:moneylens_mxt  # Nix
 ```
 
-The output is at `bazel-bin/moneydance/moneylens.mxt`. The first build takes ages
-because it downloads lots of packages, including entire Java, Kotlin, and possibly C++
-toolchains. Subsequent builds are very fast.
+The output extension bundle is at `bazel-bin/moneydance/moneylens.mxt`. The first build
+takes some time to download packages and toolchains; subsequent builds are fast.
 
 ## Code Formatting
 
