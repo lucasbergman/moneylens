@@ -60,7 +60,7 @@ Then use natural language:
 > "Create a transaction in that account for $42.50 at Organic Market, category
 > Groceries"
 
-## Example: Complex Split Transaction
+## Examples & Custom Skills
 
 Money Lens handles complex transactions like paychecks with multiple splits:
 
@@ -72,7 +72,8 @@ AI assistant: [Reads PDF, looks up category UUIDs, creates transaction with spli
 ```
 
 You can create custom skills with your employer-specific category mappings for a
-repeatable workflow.
+repeatable workflow. See [examples/](examples/) for sanitized example skills (paychecks,
+investment sweeps, store receipts) and onboarding instructions.
 
 ## License
 

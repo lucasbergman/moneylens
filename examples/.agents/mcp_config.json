@@ -1,0 +1,7 @@
+{
+    "mcpServers": {
+        "moneylens": {
+            "serverUrl": "http://127.0.0.1:51234/mcp"
+        }
+    }
+}
