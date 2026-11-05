@@ -4,10 +4,13 @@ import com.infinitekind.moneydance.model.AbstractTxn
 import com.infinitekind.moneydance.model.Account
 import com.infinitekind.moneydance.model.Account.AccountType
 import com.infinitekind.moneydance.model.AccountBook
+import com.infinitekind.moneydance.model.CurrencySnapshot
+import com.infinitekind.moneydance.model.CurrencyType
 import com.infinitekind.moneydance.model.InvestFields
 import com.infinitekind.moneydance.model.InvestTxnType
 import com.infinitekind.moneydance.model.ParentTxn
 import com.infinitekind.moneydance.model.SplitTxn
+import com.moneydance.apps.md.controller.Util
 
 class MoneydanceAccountRepository(
     private val accountBookSupplier: () -> AccountBook?,
@@ -347,6 +350,90 @@ class MoneydanceAccountRepository(
             AbstractTxn.STATUS_UNRECONCILED -> "unreconciled"
             else -> null
         }
+
+    override fun updateSecurityPrices(
+        tickerOrId: String,
+        prices: List<SecurityPriceModel>,
+    ): UpdateSecurityPricesResult {
+        val book = accountBookSupplier() ?: error("Account book is not available")
+        val currencies = book.currencies
+
+        val identifier = tickerOrId.trim()
+        val security =
+            currencies.getCurrencyByTickerSymbol(identifier)
+                ?: currencies.getCurrencyByTickerSymbol(identifier.uppercase())
+                ?: currencies.getCurrencyByUUID(identifier)
+                ?: currencies.getCurrencyByName(identifier)
+                ?: currencies.allCurrencies.firstOrNull {
+                    it.currencyType == CurrencyType.Type.SECURITY &&
+                        (
+                            it.tickerSymbol.equals(identifier, ignoreCase = true) ||
+                                it.name.equals(identifier, ignoreCase = true) ||
+                                it.idString.equals(identifier, ignoreCase = true)
+                        )
+                }
+                ?: error("Security not found for identifier: '$tickerOrId'")
+
+        if (security.currencyType != CurrencyType.Type.SECURITY) {
+            error("Currency '$tickerOrId' (${security.name}) is not a security")
+        }
+
+        val relativeCurrency = security.relativeCurrency ?: currencies.baseType
+        val sortedPrices = prices.sortedBy { it.date }
+        var latestSnapshot: CurrencySnapshot? = null
+
+        for (priceModel in sortedPrices) {
+            val dateInt = priceModel.date.toMoneydanceDateInt()
+            val effectivePrice = priceModel.effectivePrice
+            require(effectivePrice > 0.0) {
+                "Price for date ${priceModel.date} must be greater than 0, got $effectivePrice"
+            }
+
+            val rate = 1.0 / Util.safeRate(effectivePrice)
+            val snapshot = security.setSnapshotInt(dateInt, rate, relativeCurrency)
+
+            priceModel.volume?.let { snapshot.dailyVolume = it }
+            priceModel.high?.let {
+                require(it > 0.0) { "High price must be positive on ${priceModel.date}" }
+                snapshot.setDailyHigh(1.0 / Util.safeRate(it), relativeCurrency)
+            }
+            priceModel.low?.let {
+                require(it > 0.0) { "Low price must be positive on ${priceModel.date}" }
+                snapshot.setDailyLow(1.0 / Util.safeRate(it), relativeCurrency)
+            }
+
+            snapshot.syncItem()
+
+            if (latestSnapshot == null || dateInt >= latestSnapshot.dateInt) {
+                latestSnapshot = snapshot
+            }
+        }
+
+        latestSnapshot?.let { latest ->
+            val dateMs = Util.convertIntDateToLong(latest.dateInt).time
+            if (dateMs >= security.getLongParameter("price_date", 0L)) {
+                security.setRate(latest.rate, relativeCurrency)
+                security.setParameter("price_date", dateMs)
+                security.syncItem()
+            }
+        }
+
+        currencies.fireCurrencyTableModified()
+
+        val currentPrice =
+            latestSnapshot?.let { if (it.rate > 0.0) 1.0 / it.rate else null }
+                ?: security.getRate(relativeCurrency).let { if (it > 0.0) 1.0 / it else null }
+
+        return UpdateSecurityPricesResult(
+            ticker = security.tickerSymbol ?: security.idString,
+            securityId = security.uuid,
+            securityName = security.name,
+            updatedCount = sortedPrices.size,
+            firstDate = sortedPrices.firstOrNull()?.date,
+            lastDate = sortedPrices.lastOrNull()?.date,
+            currentPrice = currentPrice,
+        )
+    }
 
     private fun accountTypeString(type: AccountType): String =
         when (type) {

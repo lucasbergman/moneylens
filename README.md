@@ -18,12 +18,13 @@ The server runs on `http://127.0.0.1:51234/mcp` by default.
 
 ## MCP Tools
 
-| Tool                  | Description                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `list_accounts`       | List bank accounts, credit cards, investments, etc. Supports filtering by `name`, `id`, `type`, and `limit`. |
-| `list_categories`     | List income and expense categories. Same filtering options as accounts.                                      |
-| `get_transactions`    | Get transactions for an account within a date range, optionally filtered by description.                     |
-| `create_transactions` | Create one or more transactions with optional splits for categorization.                                     |
+| Tool                     | Description                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `list_accounts`          | List bank accounts, credit cards, investments, etc. Supports filtering by `name`, `id`, `type`, and `limit`.  |
+| `list_categories`        | List income and expense categories. Same filtering options as accounts.                                       |
+| `get_transactions`       | Get transactions for an account within a date range, optionally filtered by description.                      |
+| `create_transactions`    | Create one or more transactions with optional splits for categorization.                                      |
+| `update_security_prices` | Update historical price snapshots for a security from structured price points or Yahoo Finance CSV downloads. |
 
 ## Requirements
 

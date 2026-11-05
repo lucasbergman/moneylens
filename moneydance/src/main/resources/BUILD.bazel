@@ -8,6 +8,8 @@ _SCHEMAS = [
     "list-accounts-response",
     "list-categories-request",
     "list-categories-response",
+    "update-security-prices-request",
+    "update-security-prices-response",
 ]
 
 _PKG = "com/moneydance/modules/features/moneylens/schema"

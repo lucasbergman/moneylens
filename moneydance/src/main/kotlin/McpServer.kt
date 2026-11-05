@@ -8,6 +8,7 @@ import com.moneydance.modules.features.moneylens.tools.GetTransactionsTool
 import com.moneydance.modules.features.moneylens.tools.HelloTool
 import com.moneydance.modules.features.moneylens.tools.ListAccountsTool
 import com.moneydance.modules.features.moneylens.tools.ListCategoriesTool
+import com.moneydance.modules.features.moneylens.tools.UpdateSecurityPricesTool
 import io.modelcontextprotocol.json.jackson2.JacksonMcpJsonMapper
 import io.modelcontextprotocol.json.schema.jackson2.DefaultJsonSchemaValidator
 import io.modelcontextprotocol.server.McpSyncServer
@@ -49,6 +50,7 @@ class McpServer(
         val listCategoriesTool = ListCategoriesTool(accountRepository, jsonObjectMapper).spec
         val getTransactionsTool = GetTransactionsTool(accountRepository, jsonObjectMapper).spec
         val createTransactionsTool = CreateTransactionsTool(accountRepository, jsonObjectMapper).spec
+        val updateSecurityPricesTool = UpdateSecurityPricesTool(accountRepository, jsonObjectMapper).spec
 
         mcpSyncServer =
             McpServerFactory
@@ -67,6 +69,7 @@ class McpServer(
                     listCategoriesTool,
                     getTransactionsTool,
                     createTransactionsTool,
+                    updateSecurityPricesTool,
                 ).build()
 
         val flushingServlet = PreambleFlushingMcpServlet(transportProvider)

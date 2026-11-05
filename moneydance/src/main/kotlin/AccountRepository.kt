@@ -58,6 +58,32 @@ data class AccountFilter(
     val limit: Int? = null,
 )
 
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class SecurityPriceModel(
+    val date: String,
+    val price: Double? = null,
+    val close: Double? = null,
+    val high: Double? = null,
+    val low: Double? = null,
+    val volume: Long? = null,
+) {
+    val effectivePrice: Double
+        get() = price ?: close ?: throw IllegalArgumentException("Price entry on date '$date' is missing 'price'")
+}
+
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class UpdateSecurityPricesResult(
+    val ticker: String,
+    val securityId: String,
+    val securityName: String,
+    val updatedCount: Int,
+    val firstDate: String? = null,
+    val lastDate: String? = null,
+    val currentPrice: Double? = null,
+)
+
 interface AccountRepository {
     fun listAccounts(filter: AccountFilter = AccountFilter()): List<AccountModel>
 
@@ -72,6 +98,11 @@ interface AccountRepository {
     ): List<TransactionModel>
 
     fun createTransactions(transactions: List<TransactionModel>)
+
+    fun updateSecurityPrices(
+        tickerOrId: String,
+        prices: List<SecurityPriceModel>,
+    ): UpdateSecurityPricesResult
 }
 
 internal fun String.toMoneydanceDateInt(): Int = replace("-", "").toInt()
