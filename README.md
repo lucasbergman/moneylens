@@ -81,6 +81,8 @@ investment sweeps, store receipts) and onboarding instructions.
 
 Copyright 2026 Lucas Bergman
 
+An employer copyright waiver is on file.
+
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
 file except in compliance with the License. You may obtain a copy of the License at
 
