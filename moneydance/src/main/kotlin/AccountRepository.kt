@@ -76,8 +76,8 @@ data class AccountModel(
 data class SplitModel(
     val categoryId: String,
     val amount: Long,
-    val memo: String?,
-    val tags: List<String>?,
+    val memo: String? = null,
+    val tags: List<String>? = null,
 )
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)

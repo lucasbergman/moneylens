@@ -43,10 +43,10 @@ class MoneydanceAccountRepository(
     ): List<AccountModel> {
         val book = accountBookSupplier() ?: return emptyList()
         val typeFilter = filter.types?.map { it.toAccountType() }?.toSet()
-        val allAccounts = collectAccounts(book.rootAccount, allowed)
 
-        return allAccounts
-            .asSequence()
+        return book.rootAccount
+            .descendantsAndSelf()
+            .filter { it.accountType in allowed }
             .filter { account ->
                 if (typeFilter != null && account.accountType !in typeFilter) return@filter false
                 if (filter.id != null && account.uuid != filter.id) return@filter false
@@ -75,21 +75,6 @@ class MoneydanceAccountRepository(
             }.toList()
     }
 
-    private fun collectAccounts(
-        account: Account,
-        allowed: Set<AccountType>,
-    ): List<Account> {
-        val result = mutableListOf<Account>()
-
-        if (account.accountType in allowed) {
-            result.add(account)
-        }
-        for (sub in account.subAccounts) {
-            result.addAll(collectAccounts(sub, allowed))
-        }
-        return result
-    }
-
     override fun getTransactions(
         accountId: String,
         afterDate: LocalDate,
@@ -98,7 +83,9 @@ class MoneydanceAccountRepository(
         isUnconfirmed: Boolean?,
     ): List<TransactionModel> {
         val book = accountBookSupplier() ?: return emptyList()
-        val account = findAccountByUuid(book.rootAccount, accountId) ?: return emptyList()
+        val account =
+            book.rootAccount.descendantsAndSelf().firstOrNull { it.uuid == accountId }
+                ?: return emptyList()
 
         val afterDateInt = afterDate.toMoneydanceDateInt()
         val beforeDateInt = beforeDate?.toMoneydanceDateInt()
@@ -116,7 +103,7 @@ class MoneydanceAccountRepository(
             }.let { txns ->
                 if (isUnconfirmed != null) {
                     txns.filter { txn ->
-                        val unconfirmed = txn.isNew || (0 until txn.splitCount).any { txn.getSplit(it).isNew }
+                        val unconfirmed = txn.isNew || txn.splits.any { it.isNew }
                         unconfirmed == isUnconfirmed
                     }
                 } else {
@@ -127,12 +114,13 @@ class MoneydanceAccountRepository(
 
     override fun createTransactions(transactions: List<TransactionModel>) {
         val book = accountBookSupplier() ?: return
-        val accountMap = buildAccountMap(book.rootAccount)
+        val accountMap = book.rootAccount.descendantsAndSelf().associateBy { it.uuid }
 
         for (txnModel in transactions) {
             val account = accountMap[txnModel.accountId] ?: continue
             val dateInt = txnModel.date.toMoneydanceDateInt()
             val taxDateInt = txnModel.taxDate?.toMoneydanceDateInt() ?: dateInt
+            val statusByte = txnModel.status?.toByteStatus() ?: AbstractTxn.STATUS_UNRECONCILED
 
             val pTxn =
                 ParentTxn.makeParentTxn(
@@ -145,8 +133,21 @@ class MoneydanceAccountRepository(
                     txnModel.description,
                     txnModel.memo ?: "",
                     -1L,
-                    txnModel.status?.toByteStatus() ?: AbstractTxn.STATUS_UNRECONCILED,
+                    statusByte,
                 )
+
+            val effectiveSplits =
+                txnModel.splits
+                    ?: listOfNotNull(
+                        txnModel.categoryId?.let {
+                            SplitModel(
+                                categoryId = it,
+                                amount = txnModel.amount,
+                                memo = txnModel.memo,
+                                tags = txnModel.tags,
+                            )
+                        },
+                    )
 
             if (txnModel.investAction != null && account.accountType == AccountType.INVESTMENT) {
                 val investFields = InvestFields()
@@ -168,9 +169,7 @@ class MoneydanceAccountRepository(
                 investFields.memo = txnModel.memo ?: ""
 
                 // Map candidate accounts (from splits and category_id) to the appropriate investment fields.
-                val candidateAccounts =
-                    (txnModel.splits?.mapNotNull { accountMap[it.categoryId] } ?: emptyList()) +
-                        listOfNotNull(txnModel.categoryId?.let { accountMap[it] })
+                val candidateAccounts = effectiveSplits.mapNotNull { accountMap[it.categoryId] }
 
                 for (acct in candidateAccounts) {
                     when {
@@ -195,36 +194,18 @@ class MoneydanceAccountRepository(
 
                 investFields.storeFields(pTxn)
             } else {
-                if (!txnModel.splits.isNullOrEmpty()) {
-                    for (splitModel in txnModel.splits) {
-                        val category =
-                            accountMap[splitModel.categoryId] ?: continue
-                        val sTxn =
-                            SplitTxn.makeSplitTxn(
-                                pTxn,
-                                -splitModel.amount,
-                                -splitModel.amount,
-                                1.0,
-                                category,
-                                splitModel.memo ?: "",
-                                -1L,
-                                AbstractTxn.STATUS_UNRECONCILED,
-                            )
-                        pTxn.addSplit(sTxn)
-                    }
-                } else if (txnModel.categoryId != null) {
-                    val category =
-                        accountMap[txnModel.categoryId] ?: continue
+                for (splitModel in effectiveSplits) {
+                    val category = accountMap[splitModel.categoryId] ?: continue
                     val sTxn =
                         SplitTxn.makeSplitTxn(
                             pTxn,
-                            -txnModel.amount,
-                            -txnModel.amount,
+                            -splitModel.amount,
+                            -splitModel.amount,
                             1.0,
                             category,
-                            txnModel.memo ?: "",
+                            splitModel.memo ?: "",
                             -1L,
-                            txnModel.status?.toByteStatus() ?: AbstractTxn.STATUS_UNRECONCILED,
+                            statusByte,
                         )
                     pTxn.addSplit(sTxn)
                 }
@@ -234,33 +215,11 @@ class MoneydanceAccountRepository(
         }
     }
 
-    private fun findAccountByUuid(
-        account: Account,
-        uuid: String,
-    ): Account? {
-        if (account.uuid == uuid) return account
-        return account.subAccounts.firstNotNullOfOrNull { findAccountByUuid(it, uuid) }
-    }
-
-    private fun buildAccountMap(root: Account): Map<String, Account> {
-        val map = mutableMapOf<String, Account>()
-
-        fun traverse(account: Account) {
-            map[account.uuid] = account
-            for (sub in account.subAccounts) {
-                traverse(sub)
-            }
-        }
-        traverse(root)
-        return map
-    }
-
     private fun toTransactionModel(txn: ParentTxn): TransactionModel {
         val tags = txn.keywords.toList().ifEmpty { null }
         val taxDate =
             if (txn.taxDateInt != txn.dateInt) txn.taxDateInt.toLocalDate() else null
-        val splits =
-            (0 until txn.splitCount).map { i -> toSplitModel(txn.getSplit(i)) }
+        val splits = txn.splits.map(::toSplitModel)
 
         var shares: Long? = null
         var price: Double? = null
@@ -278,13 +237,12 @@ class MoneydanceAccountRepository(
             }
         }
 
-        val isUnconfirmed = txn.isNew || (0 until txn.splitCount).any { txn.getSplit(it).isNew }
-        val downloaded = txn.wasDownloaded() || (0 until txn.splitCount).any { txn.getSplit(it).wasDownloaded() }
+        val isUnconfirmed = txn.isNew || txn.splits.any { it.isNew }
+        val downloaded = txn.wasDownloaded() || txn.splits.any { it.wasDownloaded() }
         val fiTxnId =
             txn.getFiTxnId(0)?.ifBlank { null }
                 ?: txn.getFiTxnId(1)?.ifBlank { null }
-                ?: (0 until txn.splitCount).firstNotNullOfOrNull { i ->
-                    val split = txn.getSplit(i)
+                ?: txn.splits.firstNotNullOfOrNull { split ->
                     split.getFiTxnId(0)?.ifBlank { null } ?: split.getFiTxnId(1)?.ifBlank { null }
                 }
 
@@ -446,4 +404,15 @@ private fun Byte.toTransactionStatus(): TransactionStatus? =
         AbstractTxn.STATUS_RECONCILING -> TransactionStatus.RECONCILING
         AbstractTxn.STATUS_UNRECONCILED -> TransactionStatus.UNRECONCILED
         else -> null
+    }
+
+private val ParentTxn.splits: List<SplitTxn>
+    get() = (0 until splitCount).map(::getSplit)
+
+private fun Account.descendantsAndSelf(): Sequence<Account> =
+    sequence {
+        yield(this@descendantsAndSelf)
+        for (sub in subAccounts) {
+            yieldAll(sub.descendantsAndSelf())
+        }
     }
