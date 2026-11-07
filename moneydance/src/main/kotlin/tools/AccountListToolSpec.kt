@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.moneydance.modules.features.moneylens.AccountFilter
+import com.moneydance.modules.features.moneylens.AccountKind
 import com.moneydance.modules.features.moneylens.AccountModel
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
@@ -12,7 +13,7 @@ import io.modelcontextprotocol.spec.McpSchema
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 private data class AccountListRequest(
     @JsonProperty("type")
-    val type: List<String>? = null,
+    val type: List<AccountKind>? = null,
     val name: String? = null,
     val id: String? = null,
     val limit: Int? = null,

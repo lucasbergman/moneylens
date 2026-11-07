@@ -4,6 +4,50 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
+import com.infinitekind.moneydance.model.InvestTxnType
+
+enum class AccountKind {
+    @JsonProperty("bank")
+    BANK,
+
+    @JsonProperty("credit_card")
+    CREDIT_CARD,
+
+    @JsonProperty("investment")
+    INVESTMENT,
+
+    @JsonProperty("security")
+    SECURITY,
+
+    @JsonProperty("asset")
+    ASSET,
+
+    @JsonProperty("liability")
+    LIABILITY,
+
+    @JsonProperty("loan")
+    LOAN,
+
+    @JsonProperty("expense")
+    EXPENSE,
+
+    @JsonProperty("income")
+    INCOME,
+
+    @JsonProperty("root")
+    ROOT,
+}
+
+enum class TransactionStatus {
+    @JsonProperty("cleared")
+    CLEARED,
+
+    @JsonProperty("reconciling")
+    RECONCILING,
+
+    @JsonProperty("unreconciled")
+    UNRECONCILED,
+}
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -11,7 +55,7 @@ data class AccountModel(
     val id: String,
     val name: String,
     val fullName: String,
-    val type: String,
+    val type: AccountKind,
     val currencyCode: String,
     val decimalPlaces: Int,
     val parentId: String?,
@@ -35,7 +79,7 @@ data class TransactionModel(
     val description: String,
     val accountId: String,
     val amount: Long,
-    val status: String?,
+    val status: TransactionStatus?,
     val memo: String?,
     val checkNumber: String?,
     val tags: List<String>?,
@@ -44,7 +88,7 @@ data class TransactionModel(
     val splits: List<SplitModel>?,
     val shares: Long? = null,
     val price: Double? = null,
-    val investAction: String? = null,
+    val investAction: InvestTxnType? = null,
     @JsonProperty("is_unconfirmed")
     val isUnconfirmed: Boolean? = null,
     val downloaded: Boolean? = null,
@@ -52,7 +96,7 @@ data class TransactionModel(
 )
 
 data class AccountFilter(
-    val types: Set<String>? = null,
+    val types: Set<AccountKind>? = null,
     val name: String? = null,
     val id: String? = null,
     val limit: Int? = null,

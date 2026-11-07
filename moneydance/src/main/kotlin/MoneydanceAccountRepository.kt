@@ -15,19 +15,6 @@ import com.moneydance.apps.md.controller.Util
 class MoneydanceAccountRepository(
     private val accountBookSupplier: () -> AccountBook?,
 ) : AccountRepository {
-    private val accountTypeFromString: Map<String, AccountType> =
-        mapOf(
-            "bank" to AccountType.BANK,
-            "credit_card" to AccountType.CREDIT_CARD,
-            "investment" to AccountType.INVESTMENT,
-            "security" to AccountType.SECURITY,
-            "asset" to AccountType.ASSET,
-            "liability" to AccountType.LIABILITY,
-            "loan" to AccountType.LOAN,
-            "expense" to AccountType.EXPENSE,
-            "income" to AccountType.INCOME,
-        )
-
     private val accountTypes =
         setOf(
             AccountType.BANK,
@@ -54,7 +41,7 @@ class MoneydanceAccountRepository(
         allowed: Set<AccountType>,
     ): List<AccountModel> {
         val book = accountBookSupplier() ?: return emptyList()
-        val typeFilter = filter.types?.mapNotNull { accountTypeFromString[it] }?.toSet()
+        val typeFilter = filter.types?.map { it.toAccountType() }?.toSet()
         val allAccounts = collectAccounts(book.rootAccount, allowed)
 
         return allAccounts
@@ -71,7 +58,7 @@ class MoneydanceAccountRepository(
                     id = account.uuid,
                     name = account.accountName,
                     fullName = account.fullAccountName,
-                    type = accountTypeString(account.accountType),
+                    type = account.accountType.toAccountKind(),
                     currencyCode = account.currencyType.idString,
                     decimalPlaces = account.currencyType.decimalPlaces,
                     parentId =
@@ -154,21 +141,15 @@ class MoneydanceAccountRepository(
                     txnModel.description,
                     txnModel.memo ?: "",
                     -1L,
-                    txnModel.status?.let { parseStatus(it) } ?: AbstractTxn.STATUS_UNRECONCILED,
+                    txnModel.status?.toByteStatus() ?: AbstractTxn.STATUS_UNRECONCILED,
                 )
 
             if (txnModel.investAction != null && account.accountType == AccountType.INVESTMENT) {
                 val investFields = InvestFields()
-                val action =
-                    try {
-                        InvestTxnType.valueOf(txnModel.investAction.uppercase())
-                    } catch (_: Exception) {
-                        InvestTxnType.BANK
-                    }
                 // setFieldStatus configures the InvestFields flags (hasSecurity, hasXfrAcct, etc)
                 // for the given action, but also populates defaults (like "Bills") that we
                 // want to override with our own candidates.
-                investFields.setFieldStatus(action, pTxn)
+                investFields.setFieldStatus(txnModel.investAction, pTxn)
                 investFields.security = null
                 investFields.xfrAcct = null
                 investFields.category = null
@@ -204,7 +185,7 @@ class MoneydanceAccountRepository(
                 }
 
                 // Fallback for BANK transactions to ensure the transfer account is set.
-                if (action == InvestTxnType.BANK && investFields.xfrAcct == null) {
+                if (txnModel.investAction == InvestTxnType.BANK && investFields.xfrAcct == null) {
                     investFields.xfrAcct = candidateAccounts.firstOrNull()
                 }
 
@@ -239,7 +220,7 @@ class MoneydanceAccountRepository(
                             category,
                             txnModel.memo ?: "",
                             -1L,
-                            txnModel.status?.let { parseStatus(it) } ?: AbstractTxn.STATUS_UNRECONCILED,
+                            txnModel.status?.toByteStatus() ?: AbstractTxn.STATUS_UNRECONCILED,
                         )
                     pTxn.addSplit(sTxn)
                 }
@@ -248,14 +229,6 @@ class MoneydanceAccountRepository(
             book.transactionSet.addNewTxn(pTxn)
         }
     }
-
-    private fun parseStatus(status: String): Byte =
-        when (status.lowercase()) {
-            "cleared" -> AbstractTxn.STATUS_CLEARED
-            "reconciling" -> AbstractTxn.STATUS_RECONCILING
-            "unreconciled" -> AbstractTxn.STATUS_UNRECONCILED
-            else -> AbstractTxn.STATUS_UNRECONCILED
-        }
 
     private fun findAccountByUuid(
         account: Account,
@@ -287,7 +260,7 @@ class MoneydanceAccountRepository(
 
         var shares: Long? = null
         var price: Double? = null
-        var investAction: String? = null
+        var investAction: InvestTxnType? = null
         var amount = txn.value
 
         if (txn.account.accountType == AccountType.INVESTMENT) {
@@ -296,7 +269,7 @@ class MoneydanceAccountRepository(
             if (investFields.txnType != null) {
                 shares = investFields.shares
                 price = investFields.price
-                investAction = investFields.txnType.name
+                investAction = investFields.txnType
                 amount = investFields.amount
             }
         }
@@ -317,7 +290,7 @@ class MoneydanceAccountRepository(
             description = txn.description,
             accountId = txn.account.uuid,
             amount = amount,
-            status = toStatus(txn.status),
+            status = txn.status.toTransactionStatus(),
             memo = txn.memo?.ifEmpty { null },
             checkNumber = txn.checkNumber?.ifEmpty { null },
             tags = tags,
@@ -342,14 +315,6 @@ class MoneydanceAccountRepository(
             tags = tags,
         )
     }
-
-    private fun toStatus(status: Byte): String? =
-        when (status) {
-            AbstractTxn.STATUS_CLEARED -> "cleared"
-            AbstractTxn.STATUS_RECONCILING -> "reconciling"
-            AbstractTxn.STATUS_UNRECONCILED -> "unreconciled"
-            else -> null
-        }
 
     override fun updateSecurityPrices(
         tickerOrId: String,
@@ -434,18 +399,47 @@ class MoneydanceAccountRepository(
             currentPrice = currentPrice,
         )
     }
-
-    private fun accountTypeString(type: AccountType): String =
-        when (type) {
-            AccountType.BANK -> "bank"
-            AccountType.CREDIT_CARD -> "credit_card"
-            AccountType.INVESTMENT -> "investment"
-            AccountType.SECURITY -> "security"
-            AccountType.ASSET -> "asset"
-            AccountType.LIABILITY -> "liability"
-            AccountType.LOAN -> "loan"
-            AccountType.EXPENSE -> "expense"
-            AccountType.INCOME -> "income"
-            AccountType.ROOT -> "root"
-        }
 }
+
+private fun AccountKind.toAccountType(): AccountType =
+    when (this) {
+        AccountKind.BANK -> AccountType.BANK
+        AccountKind.CREDIT_CARD -> AccountType.CREDIT_CARD
+        AccountKind.INVESTMENT -> AccountType.INVESTMENT
+        AccountKind.SECURITY -> AccountType.SECURITY
+        AccountKind.ASSET -> AccountType.ASSET
+        AccountKind.LIABILITY -> AccountType.LIABILITY
+        AccountKind.LOAN -> AccountType.LOAN
+        AccountKind.EXPENSE -> AccountType.EXPENSE
+        AccountKind.INCOME -> AccountType.INCOME
+        AccountKind.ROOT -> AccountType.ROOT
+    }
+
+private fun AccountType.toAccountKind(): AccountKind =
+    when (this) {
+        AccountType.BANK -> AccountKind.BANK
+        AccountType.CREDIT_CARD -> AccountKind.CREDIT_CARD
+        AccountType.INVESTMENT -> AccountKind.INVESTMENT
+        AccountType.SECURITY -> AccountKind.SECURITY
+        AccountType.ASSET -> AccountKind.ASSET
+        AccountType.LIABILITY -> AccountKind.LIABILITY
+        AccountType.LOAN -> AccountKind.LOAN
+        AccountType.EXPENSE -> AccountKind.EXPENSE
+        AccountType.INCOME -> AccountKind.INCOME
+        AccountType.ROOT -> AccountKind.ROOT
+    }
+
+private fun TransactionStatus.toByteStatus(): Byte =
+    when (this) {
+        TransactionStatus.CLEARED -> AbstractTxn.STATUS_CLEARED
+        TransactionStatus.RECONCILING -> AbstractTxn.STATUS_RECONCILING
+        TransactionStatus.UNRECONCILED -> AbstractTxn.STATUS_UNRECONCILED
+    }
+
+private fun Byte.toTransactionStatus(): TransactionStatus? =
+    when (this) {
+        AbstractTxn.STATUS_CLEARED -> TransactionStatus.CLEARED
+        AbstractTxn.STATUS_RECONCILING -> TransactionStatus.RECONCILING
+        AbstractTxn.STATUS_UNRECONCILED -> TransactionStatus.UNRECONCILED
+        else -> null
+    }
