@@ -2,19 +2,21 @@ package com.moneydance.modules.features.moneylens.tools
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.moneydance.modules.features.moneylens.AccountRepository
-import com.moneydance.modules.features.moneylens.toMoneydanceDateInt
+import com.moneydance.modules.features.moneylens.LocalDateDeserializer
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 private data class GetTransactionsRequest(
     val accountId: String? = null,
-    val minDate: String? = null,
-    val maxDate: String? = null,
+    @JsonDeserialize(using = LocalDateDeserializer::class)
+    val minDate: LocalDate? = null,
+    @JsonDeserialize(using = LocalDateDeserializer::class)
+    val maxDate: LocalDate? = null,
     val description: String? = null,
     val isUnconfirmed: Boolean? = null,
 )
@@ -49,20 +51,14 @@ class GetTransactionsTool(
                     req.accountId?.ifBlank { null }
                         ?: error("account_id is required")
 
-                val afterDateInt =
-                    req.minDate?.toMoneydanceDateInt()
-                        ?: LocalDate
-                            .now()
-                            .minusDays(30)
-                            .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-                            .toInt()
-                val beforeDateInt = req.maxDate?.toMoneydanceDateInt()
+                val afterDate = req.minDate ?: LocalDate.now().minusDays(30)
+                val beforeDate = req.maxDate
 
                 val transactions =
                     accountRepository.getTransactions(
                         accountId = accountId,
-                        afterDateInt = afterDateInt,
-                        beforeDateInt = beforeDateInt,
+                        afterDate = afterDate,
+                        beforeDate = beforeDate,
                         description = req.description,
                         isUnconfirmed = req.isUnconfirmed,
                     )

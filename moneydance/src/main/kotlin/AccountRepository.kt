@@ -2,9 +2,18 @@ package com.moneydance.modules.features.moneylens
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonNaming
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.infinitekind.moneydance.model.InvestTxnType
+import java.time.LocalDate
 
 enum class AccountKind {
     @JsonProperty("bank")
@@ -74,8 +83,12 @@ data class SplitModel(
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class TransactionModel(
-    val date: String,
-    val taxDate: String?,
+    @JsonSerialize(using = LocalDateSerializer::class)
+    @JsonDeserialize(using = LocalDateDeserializer::class)
+    val date: LocalDate,
+    @JsonSerialize(using = LocalDateSerializer::class)
+    @JsonDeserialize(using = LocalDateDeserializer::class)
+    val taxDate: LocalDate? = null,
     val description: String,
     val accountId: String,
     val amount: Long,
@@ -105,7 +118,9 @@ data class AccountFilter(
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class SecurityPriceModel(
-    val date: String,
+    @JsonSerialize(using = LocalDateSerializer::class)
+    @JsonDeserialize(using = LocalDateDeserializer::class)
+    val date: LocalDate,
     val price: Double? = null,
     val close: Double? = null,
     val high: Double? = null,
@@ -123,8 +138,12 @@ data class UpdateSecurityPricesResult(
     val securityId: String,
     val securityName: String,
     val updatedCount: Int,
-    val firstDate: String? = null,
-    val lastDate: String? = null,
+    @JsonSerialize(using = LocalDateSerializer::class)
+    @JsonDeserialize(using = LocalDateDeserializer::class)
+    val firstDate: LocalDate? = null,
+    @JsonSerialize(using = LocalDateSerializer::class)
+    @JsonDeserialize(using = LocalDateDeserializer::class)
+    val lastDate: LocalDate? = null,
     val currentPrice: Double? = null,
 )
 
@@ -135,8 +154,8 @@ interface AccountRepository {
 
     fun getTransactions(
         accountId: String,
-        afterDateInt: Int,
-        beforeDateInt: Int? = null,
+        afterDate: LocalDate,
+        beforeDate: LocalDate? = null,
         description: String? = null,
         isUnconfirmed: Boolean? = null,
     ): List<TransactionModel>
@@ -149,10 +168,23 @@ interface AccountRepository {
     ): UpdateSecurityPricesResult
 }
 
-internal fun String.toMoneydanceDateInt(): Int = replace("-", "").toInt()
-
-internal fun Int.toIsoDateString(): String {
-    val s = toString()
-    if (s.length != 8) return s
-    return "${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)}"
+class LocalDateSerializer : JsonSerializer<LocalDate>() {
+    override fun serialize(
+        value: LocalDate,
+        gen: JsonGenerator,
+        serializers: SerializerProvider,
+    ) {
+        gen.writeString(value.toString())
+    }
 }
+
+class LocalDateDeserializer : JsonDeserializer<LocalDate>() {
+    override fun deserialize(
+        p: JsonParser,
+        ctxt: DeserializationContext,
+    ): LocalDate = LocalDate.parse(p.text)
+}
+
+internal fun LocalDate.toMoneydanceDateInt(): Int = year * 10000 + monthValue * 100 + dayOfMonth
+
+internal fun Int.toLocalDate(): LocalDate = if (this <= 0) LocalDate.EPOCH else LocalDate.of(this / 10000, (this / 100) % 100, this % 100)

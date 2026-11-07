@@ -2,6 +2,7 @@ package com.moneydance.modules.features.moneylens
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.moneydance.modules.features.moneylens.tools.CreateTransactionsTool
 import com.moneydance.modules.features.moneylens.tools.GetTransactionsTool
@@ -23,6 +24,7 @@ import org.eclipse.jetty.ee10.servlet.ServletHolder
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import java.io.PrintWriter
+import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 import io.modelcontextprotocol.server.McpServer as McpServerFactory
 
@@ -34,9 +36,16 @@ class McpServer(
     private var mcpSyncServer: McpSyncServer? = null
 
     fun start() {
+        val dateModule =
+            SimpleModule().apply {
+                addSerializer(LocalDate::class.java, LocalDateSerializer())
+                addDeserializer(LocalDate::class.java, LocalDateDeserializer())
+            }
+
         val jsonObjectMapper =
             ObjectMapper()
                 .registerKotlinModule()
+                .registerModule(dateModule)
                 .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
 
         val transportProvider =

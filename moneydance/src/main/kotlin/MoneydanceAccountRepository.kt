@@ -11,6 +11,7 @@ import com.infinitekind.moneydance.model.InvestTxnType
 import com.infinitekind.moneydance.model.ParentTxn
 import com.infinitekind.moneydance.model.SplitTxn
 import com.moneydance.apps.md.controller.Util
+import java.time.LocalDate
 
 class MoneydanceAccountRepository(
     private val accountBookSupplier: () -> AccountBook?,
@@ -91,13 +92,16 @@ class MoneydanceAccountRepository(
 
     override fun getTransactions(
         accountId: String,
-        afterDateInt: Int,
-        beforeDateInt: Int?,
+        afterDate: LocalDate,
+        beforeDate: LocalDate?,
         description: String?,
         isUnconfirmed: Boolean?,
     ): List<TransactionModel> {
         val book = accountBookSupplier() ?: return emptyList()
         val account = findAccountByUuid(book.rootAccount, accountId) ?: return emptyList()
+
+        val afterDateInt = afterDate.toMoneydanceDateInt()
+        val beforeDateInt = beforeDate?.toMoneydanceDateInt()
 
         return book.transactionSet
             .getTransactionsForAccount(account)
@@ -254,7 +258,7 @@ class MoneydanceAccountRepository(
     private fun toTransactionModel(txn: ParentTxn): TransactionModel {
         val tags = txn.keywords.toList().ifEmpty { null }
         val taxDate =
-            if (txn.taxDateInt != txn.dateInt) txn.taxDateInt.toIsoDateString() else null
+            if (txn.taxDateInt != txn.dateInt) txn.taxDateInt.toLocalDate() else null
         val splits =
             (0 until txn.splitCount).map { i -> toSplitModel(txn.getSplit(i)) }
 
@@ -285,7 +289,7 @@ class MoneydanceAccountRepository(
                 }
 
         return TransactionModel(
-            date = txn.dateInt.toIsoDateString(),
+            date = txn.dateInt.toLocalDate(),
             taxDate = taxDate,
             description = txn.description,
             accountId = txn.account.uuid,
