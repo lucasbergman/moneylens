@@ -1,11 +1,17 @@
 package com.moneydance.modules.features.moneylens.tools
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.moneydance.modules.features.moneylens.AccountRepository
 import com.moneydance.modules.features.moneylens.TransactionModel
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
+
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+private data class CreateTransactionsRequest(
+    val transactions: List<TransactionModel>? = null,
+)
 
 class CreateTransactionsTool(
     private val accountRepository: AccountRepository,
@@ -27,10 +33,14 @@ class CreateTransactionsTool(
                         "Creates new transactions in Moneydance. Accepts a list of transactions.",
                     ).build(),
             ).callHandler { _, request ->
-                val txnsArg =
-                    request.arguments()?.get("transactions")
+                val req =
+                    mapper.convertValue(
+                        request.arguments() ?: emptyMap<String, Any?>(),
+                        CreateTransactionsRequest::class.java,
+                    )
+                val txns =
+                    req.transactions
                         ?: throw IllegalArgumentException("transactions argument is required")
-                val txns = mapper.convertValue(txnsArg, object : TypeReference<List<TransactionModel>>() {})
 
                 accountRepository.createTransactions(txns)
 

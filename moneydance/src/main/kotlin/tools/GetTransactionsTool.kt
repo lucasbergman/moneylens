@@ -1,12 +1,23 @@
 package com.moneydance.modules.features.moneylens.tools
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.moneydance.modules.features.moneylens.AccountRepository
 import com.moneydance.modules.features.moneylens.toMoneydanceDateInt
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+private data class GetTransactionsRequest(
+    val accountId: String? = null,
+    val minDate: String? = null,
+    val maxDate: String? = null,
+    val description: String? = null,
+    val isUnconfirmed: Boolean? = null,
+)
 
 class GetTransactionsTool(
     private val accountRepository: AccountRepository,
@@ -29,31 +40,31 @@ class GetTransactionsTool(
                             "date range and description filtering.",
                     ).build(),
             ).callHandler { _, request ->
-                val args = request.arguments() ?: emptyMap()
+                val req =
+                    objectMapper.convertValue(
+                        request.arguments() ?: emptyMap<String, Any?>(),
+                        GetTransactionsRequest::class.java,
+                    )
                 val accountId =
-                    args["account_id"] as? String
+                    req.accountId?.ifBlank { null }
                         ?: error("account_id is required")
-                val minDate = args["min_date"] as? String
-                val maxDate = args["max_date"] as? String
-                val description = args["description"] as? String
-                val isUnconfirmed = args["is_unconfirmed"] as? Boolean
 
                 val afterDateInt =
-                    minDate?.toMoneydanceDateInt()
+                    req.minDate?.toMoneydanceDateInt()
                         ?: LocalDate
                             .now()
                             .minusDays(30)
                             .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
                             .toInt()
-                val beforeDateInt = maxDate?.toMoneydanceDateInt()
+                val beforeDateInt = req.maxDate?.toMoneydanceDateInt()
 
                 val transactions =
                     accountRepository.getTransactions(
                         accountId = accountId,
                         afterDateInt = afterDateInt,
                         beforeDateInt = beforeDateInt,
-                        description = description,
-                        isUnconfirmed = isUnconfirmed,
+                        description = req.description,
+                        isUnconfirmed = req.isUnconfirmed,
                     )
 
                 McpSchema.CallToolResult

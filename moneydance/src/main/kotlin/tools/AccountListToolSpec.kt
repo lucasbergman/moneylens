@@ -1,10 +1,30 @@
 package com.moneydance.modules.features.moneylens.tools
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.moneydance.modules.features.moneylens.AccountFilter
 import com.moneydance.modules.features.moneylens.AccountModel
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
+
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+private data class AccountListRequest(
+    @JsonProperty("type")
+    val type: List<String>? = null,
+    val name: String? = null,
+    val id: String? = null,
+    val limit: Int? = null,
+) {
+    fun toFilter(): AccountFilter =
+        AccountFilter(
+            types = type?.toSet(),
+            name = name,
+            id = id,
+            limit = limit,
+        )
+}
 
 internal fun accountListSpec(
     toolName: String,
@@ -29,19 +49,12 @@ internal fun accountListSpec(
                 .description(description)
                 .build(),
         ).callHandler { _, request ->
-            val args = request.arguments()
-            val filter =
-                AccountFilter(
-                    types =
-                        (args?.get("type") as? List<*>)
-                            ?.filterIsInstance<String>()
-                            ?.toSet(),
-                    name = args?.get("name") as? String,
-                    id = args?.get("id") as? String,
-                    limit = (args?.get("limit") as? Number)?.toInt(),
+            val req =
+                objectMapper.convertValue(
+                    request.arguments() ?: emptyMap<String, Any?>(),
+                    AccountListRequest::class.java,
                 )
-
-            val results = listFn(filter)
+            val results = listFn(req.toFilter())
             McpSchema.CallToolResult
                 .builder()
                 .structuredContent(mapOf(responseKey to results))

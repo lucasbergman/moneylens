@@ -2,10 +2,19 @@ package com.moneydance.modules.features.moneylens.tools
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.moneydance.modules.features.moneylens.AccountRepository
 import com.moneydance.modules.features.moneylens.SecurityPriceModel
 import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification
 import io.modelcontextprotocol.spec.McpSchema
+
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+private data class UpdateSecurityPricesRequest(
+    val ticker: String? = null,
+    val securityId: String? = null,
+    val prices: List<SecurityPriceModel>? = null,
+)
 
 class UpdateSecurityPricesTool(
     private val accountRepository: AccountRepository,
@@ -26,23 +35,19 @@ class UpdateSecurityPricesTool(
                     .description("Updates historical price snapshots for a security in Moneydance.")
                     .build(),
             ).callHandler { _, request ->
-                val args = request.arguments() ?: emptyMap()
-                val ticker = args["ticker"] as? String
-                val securityId = args["security_id"] as? String
-
+                val req =
+                    mapper.convertValue(
+                        request.arguments() ?: emptyMap<String, Any?>(),
+                        UpdateSecurityPricesRequest::class.java,
+                    )
                 val identifier =
-                    ticker?.ifBlank { null }
-                        ?: securityId?.ifBlank { null }
+                    req.ticker?.ifBlank { null }
+                        ?: req.securityId?.ifBlank { null }
                         ?: throw IllegalArgumentException("Either 'ticker' or 'security_id' must be specified")
 
-                val pricesArg =
-                    args["prices"]
+                val prices =
+                    req.prices?.ifEmpty { null }
                         ?: throw IllegalArgumentException("prices argument is required")
-                val prices = mapper.convertValue(pricesArg, object : TypeReference<List<SecurityPriceModel>>() {})
-
-                if (prices.isEmpty()) {
-                    throw IllegalArgumentException("No price entries provided to update")
-                }
 
                 val result = accountRepository.updateSecurityPrices(identifier, prices)
                 val responseMap =
