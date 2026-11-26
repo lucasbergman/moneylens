@@ -27,12 +27,12 @@ If you are building without Nix, install:
 - A C++ toolchain (e.g. GCC or Clang, needed for Bazel's native helper binaries)
 
 I've tested that the build works on Ubuntu 26.04 LTS. I think everything should work on
-normie Linux and other Unix as long as Bazel is supported. I'm less certain about macOS
-and Windows, but there's a fighting chance. Patches are very welcome.
+normie Linux and other Unix as long as Bazel is supported. I've had some reports that it
+works on macOS and Windows. Patches are very welcome.
 
 ## Building
 
-You can build the Moneydance extension directly with Bazel:
+Build the Moneydance extension with Bazel:
 
 ```bash
 bazel build //moneydance:moneylens_mxt  # non-Nix
