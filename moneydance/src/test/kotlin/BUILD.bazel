@@ -1,0 +1,13 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+kt_jvm_test(
+    name = "mcp_server_e2e_test",
+    size = "small",
+    srcs = ["McpServerEndToEndTest.kt"],
+    main_class = "com.moneydance.modules.features.moneylens.McpServerEndToEndTestKt",
+    deps = [
+        "//moneydance/src/main/kotlin:moneylens_lib",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@moneydance_devkit//:lib",
+    ],
+)
