@@ -6,10 +6,13 @@ kt_kotlinc_options(
     visibility = ["//visibility:private"],
 )
 
-# Moneydance extensions target Java 21, matching the runtime version
-# shipped with Moneydance 2024+ and dependencies such as the MCP SDK
-# (which uses Java 16 records).
+# Moneydance 2024+ (build 5253) ships Java 21 and Kotlin stdlib 1.9.21.
+# Kotlin 2.4 no longer supports language/API version 1.9, so pin both to
+# 2.0 (the lowest supported version) to avoid emitting references to
+# Kotlin 2.2+ runtime helpers.
 define_kt_toolchain(
     name = "kotlin_toolchain_moneydance",
+    api_version = "2.0",
     kotlinc_options = ":kt_options_jvm_21",
+    language_version = "2.0",
 )
